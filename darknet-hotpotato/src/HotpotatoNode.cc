@@ -24,3 +24,18 @@ HotpotatoNode::~HotpotatoNode() {
     // TODO Auto-generated destructor stub
 }
 
+void HotpotatoNode::sendMessage(DarknetMessage* msg) {
+    if(!peers.size()) {
+        // peer list empty -> raise exception?
+        return;
+    }
+    DarknetNode* destPeer;
+    if(peers.find(msg->destNodeID) != peers.end()) {
+        destPeer = peers[msg->destNodeID];
+    }else {
+        std::map::iterator it = peers.begin();
+        std::advance(it, rand() % peers.size());
+        destPeer = (*it).second;
+    }
+    sendPacket(msg,destPeer->address,destPeer->port);
+}

@@ -21,15 +21,22 @@
 #include "messages/DarknetMessage.h"
 #include "messages/MaintenanceMessage.h"
 
+struct {
+    const int nodeID;
+    IPvXAddress address;
+    int port;
+} typedef DarknetNode;
+
 class DarknetBaseNode : public UDPAppBase  {
 protected:
 
     std::string nodeID;
     int localPort;
+    std::map<int, DarknetNode> peers;
 
     // higher level interface for DarknetNodes
     virtual void sendMessage(DarknetMessage* msg);
-    virtual void connectPeer(IPvXAddress destAddr, int destPort);
+    virtual void connectPeer(IPvXAddress* destAddr, int destPort);
 
     virtual void handleMaintenanceMessage(MaintenanceMessage* msg);
     virtual void handleRequestMessage(DarknetMessage* msg);
@@ -37,7 +44,7 @@ protected:
 
     virtual void handleMessage(cMessage* msg);
     virtual void processIncomingPacket(DarknetMessage* msg);
-    virtual void sendPacket(cPacket *pkg); // most likely only a wrapper around sendToUDP
+    virtual void sendPacket(cPacket* pkg, IPvXAddress destAddr, int destPort); // most likely only a wrapper around sendToUDP
 
 
     virtual int numInitStages() const { return 4; } //TODO: why? why 4?

@@ -22,6 +22,8 @@ class HotpotatoNode: public DarknetBaseNode {
 public:
     HotpotatoNode();
     virtual ~HotpotatoNode();
+protected:
+    virtual void sendMessage(DarknetMessage* msg);
 };
 
 #endif /* HOTPOTATONODE_H_ */

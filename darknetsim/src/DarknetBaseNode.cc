@@ -32,10 +32,9 @@ void DarknetBaseNode::initialize(int stage)
 }
 
 
-void DarknetBaseNode::sendPacket(cPacket *pkg)
+void DarknetBaseNode::sendPacket(cPacket* pkg, const IPvXAddress destAddr, int destPort)
 {
-//    sendToUDP(pkg, localPort, destAddress, destPort);
-
+    sendToUDP(pkg, localPort, destAddr, destPort);
 }
 
 void DarknetBaseNode::handleMessage(cMessage *msg)
@@ -48,18 +47,18 @@ void DarknetBaseNode::handleMessage(cMessage *msg)
 
 
         // or a packet that we want so send..
-        sendPacket(check_and_cast<cPacket*>(msg));
+        sendMessage(check_and_cast<DarknetMessage*>(msg));
     }
     else
     {
         processIncomingPacket(check_and_cast<DarknetMessage*>(msg));
     }
 
-    if (ev.isGUI())
-    {
-        char buf[40];
+//    if (ev.isGUI())
+//    {
+//        char buf[40];
 //        sprintf(buf, "rcvd: %d pks\nsent: %d pks", numReceived, numSent);
-        setDisplayString("t=0");
+//        setDisplayString("t=0");
     }
 }
 
@@ -67,6 +66,10 @@ void DarknetBaseNode::handleMessage(cMessage *msg)
 void DarknetBaseNode::processIncomingPacket(DarknetMessage *msg)
 {
     if (msg->destNodeID != nodeID) {
+        if(msg->TTL > 0) {
+            msg->TTL -= 1;
+            sendMessage(msg);
+        }
         //forward message
     }
 
