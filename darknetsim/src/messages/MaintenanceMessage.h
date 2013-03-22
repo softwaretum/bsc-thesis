@@ -16,7 +16,7 @@
 #ifndef MAINTENANCEMESSAGE_H_
 #define MAINTENANCEMESSAGE_H_
 
-#include <DarknetMessage.h>
+#include "messages/DarknetMessage.h"
 
 class MaintenanceMessage: public DarknetMessage {
 public:

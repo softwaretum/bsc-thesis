@@ -28,7 +28,7 @@ network HotpotTest
     submodules:
         configurator: FlatNetworkConfigurator {
             @display("p=24,28;i=block/cogwheel");
-            networkAddress = "145.236.0.0";
+            networkAddress = "23.42.0.0";
             netmask = "255.255.0.0";
         }
         host1: StandardHost {

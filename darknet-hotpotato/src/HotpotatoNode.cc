@@ -14,28 +14,33 @@
 // 
 
 #include "HotpotatoNode.h"
+#include "IPAddressResolver.h"
 
-HotpotatoNode::HotpotatoNode() {
-    // TODO Auto-generated constructor stub
+Define_Module(HotpotatoNode);
 
-}
+void HotpotatoNode::initialize(int stage)
+{
 
-HotpotatoNode::~HotpotatoNode() {
-    // TODO Auto-generated destructor stub
+    DarknetBaseNode::initialize(stage);
+
+    int peerID = par("dest_ID");
+    DarknetNode peer = { peerID, IPAddressResolver().resolve(par("dest_address")), (int) par("dest_port")};
+    peers->insert(std::pair<int, DarknetNode>(peerID,peer));
+
 }
 
 void HotpotatoNode::sendMessage(DarknetMessage* msg) {
-    if(!peers.size()) {
+    if(!peers->size()) {
         // peer list empty -> raise exception?
         return;
     }
-    DarknetNode* destPeer;
-    if(peers.find(msg->destNodeID) != peers.end()) {
+    DarknetNode destPeer;
+    if(peers->find(msg->destNodeID) != peers->end()) {
         destPeer = peers[msg->destNodeID];
     }else {
-        std::map::iterator it = peers.begin();
-        std::advance(it, rand() % peers.size());
-        destPeer = (*it).second;
+        std::map<int, DarknetNode>::iterator iter = peers->begin();
+        std::advance(iter, 0 /* TODO: random iteration */);
+        destPeer = iter->second;
     }
-    sendPacket(msg,destPeer->address,destPeer->port);
+    sendPacket(msg,destPeer.address,destPeer.port);
 }

@@ -15,26 +15,24 @@
 
 #include <omnetpp.h>
 #include "DarknetBaseNode.h"
+#include "IPAddressResolver.h"
 //#include "UDPControlInfo_m.h"
+
+
+//Define_Module(DarknetBaseNode);
 
 void DarknetBaseNode::initialize(int stage)
 {
-    // because of IPAddressResolver, we need to wait until interfaces are registered,
-    // address auto-assignment takes place etc.
-    // TODO took this from Strufes UDPSampleApp; where do we have to add boottrsap?
-    if (stage!=3)
-        return;
-
-
+    peers = new std::map<int, DarknetNode>();
+    nodeID = par("node_id");
     localPort = par("local_port");
-
     bindToPort(localPort);
 }
 
 
-void DarknetBaseNode::sendPacket(cPacket* pkg, const IPvXAddress destAddr, int destPort)
+void DarknetBaseNode::sendPacket(cPacket* pkg, IPvXAddress* destAddr, int destPort)
 {
-    sendToUDP(pkg, localPort, destAddr, destPort);
+    sendToUDP(pkg, localPort, (*destAddr), destPort);
 }
 
 void DarknetBaseNode::handleMessage(cMessage *msg)
@@ -59,7 +57,7 @@ void DarknetBaseNode::handleMessage(cMessage *msg)
 //        char buf[40];
 //        sprintf(buf, "rcvd: %d pks\nsent: %d pks", numReceived, numSent);
 //        setDisplayString("t=0");
-    }
+//    }
 }
 
 

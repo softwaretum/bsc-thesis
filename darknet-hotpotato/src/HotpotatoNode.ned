@@ -13,18 +13,20 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#ifndef HOTPOTATONODE_H_
-#define HOTPOTATONODE_H_
+package darknet_hotpotato;
 
-#include <DarknetBaseNode.h>
-
-class HotpotatoNode: public DarknetBaseNode {
-//public:
-//   HotpotatoNode();
-//    virtual ~HotpotatoNode();
-protected:
-    virtual void sendMessage(DarknetMessage* msg);
-    virtual void initialize(int stage);
-};
-
-#endif /* HOTPOTATONODE_H_ */
+simple HotpotatoNode like inet.applications.udpapp.UDPApp { //darknetsim.DarknetBaseNode {
+    parameters:
+        int dest_port;
+        int dest_id;
+        volatile string dest_address;
+        
+        
+        int local_port;
+        int node_id;
+        
+    gates:
+	    input udpIn;
+	    output udpOut;
+    
+}
