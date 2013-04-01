@@ -25,6 +25,7 @@ struct DarknetNode{
     int nodeID;
     IPvXAddress address;
     int port;
+    bool active;
 };
 
 class DarknetBaseNode : public UDPAppBase  {
@@ -32,17 +33,17 @@ protected:
 
     int nodeID;
     int localPort;
-    std::map<int, DarknetNode>* peers;
+    std::map<int, DarknetNode*> peers;
 
     static int counter;
 
 
     // higher level interface for DarknetNodes
     virtual void sendMessage(DarknetMessage* msg);
-    virtual void connectPeer(IPvXAddress* destAddr, int destPort);
+ //   virtual void connectPeer(IPvXAddress* destAddr, int destPort);
 
-    virtual void handleMaintenanceMessage(MaintenanceMessage* msg);
-    virtual void handleRequestMessage(DarknetMessage* msg);
+ //   virtual void handleMaintenanceMessage(MaintenanceMessage* msg);
+ //   virtual void handleRequestMessage(DarknetMessage* msg);
 
 
     virtual void handleMessage(cMessage* msg);

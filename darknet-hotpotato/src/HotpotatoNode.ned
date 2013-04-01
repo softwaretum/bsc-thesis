@@ -15,15 +15,15 @@
 
 package darknet_hotpotato;
 
-simple HotpotatoNode like inet.applications.udpapp.UDPApp { //darknetsim.DarknetBaseNode {
+simple HotpotatoNode extends darknetsim.DarknetBaseNode {
     parameters:
         int dest_port;
         int dest_id;
         volatile string dest_address;
         
         
-        int local_port;
-        int node_id;
+//        int local_port;
+//        int node_id;
         
     gates:
 	    input udpIn;

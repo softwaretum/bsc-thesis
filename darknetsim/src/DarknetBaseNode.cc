@@ -23,7 +23,7 @@
 
 void DarknetBaseNode::initialize(int stage)
 {
-    peers = new std::map<int, DarknetNode>();
+//    peers = std::map<int, DarknetNode>();
     nodeID = par("node_id");
     localPort = par("local_port");
     bindToPort(localPort);
@@ -39,11 +39,7 @@ void DarknetBaseNode::handleMessage(cMessage *msg)
 {
     if (msg->isSelfMessage())
     {
-
         // maybe a timer / internal message handling?
-
-
-
         // or a packet that we want so send..
         sendMessage(check_and_cast<DarknetMessage*>(msg));
     }
@@ -51,13 +47,6 @@ void DarknetBaseNode::handleMessage(cMessage *msg)
     {
         processIncomingPacket(check_and_cast<DarknetMessage*>(msg));
     }
-
-//    if (ev.isGUI())
-//    {
-//        char buf[40];
-//        sprintf(buf, "rcvd: %d pks\nsent: %d pks", numReceived, numSent);
-//        setDisplayString("t=0");
-//    }
 }
 
 

@@ -24,23 +24,28 @@ void HotpotatoNode::initialize(int stage)
     DarknetBaseNode::initialize(stage);
 
     int peerID = par("dest_ID");
-    DarknetNode peer = { peerID, IPAddressResolver().resolve(par("dest_address")), (int) par("dest_port")};
-    peers->insert(std::pair<int, DarknetNode>(peerID,peer));
+    DarknetNode* peer = new DarknetNode;
+    peer->nodeID = peerID;
+    peer->address = IPAddressResolver().resolve(par("dest_address"));
+    peer->port = par("dest_port");
+    peer->active = true;
+    peers.insert(std::pair<int, DarknetNode*>(peerID,peer));
 
 }
 
 void HotpotatoNode::sendMessage(DarknetMessage* msg) {
-    if(!peers->size()) {
+    if(!peers.size()) {
         // peer list empty -> raise exception?
         return;
     }
-    DarknetNode destPeer;
-    if(peers->find(msg->destNodeID) != peers->end()) {
-        destPeer = peers[msg->destNodeID];
+    DarknetNode *destPeer;
+    if(peers.find(msg->destNodeID) != peers.end()) {
+//        destPeer = peers[msg->destNodeID];
+        destPeer = peers[0];
     }else {
-        std::map<int, DarknetNode>::iterator iter = peers->begin();
-        std::advance(iter, 0 /* TODO: random iteration */);
+        std::map<int, DarknetNode*>::iterator iter = peers.begin();
+        std::advance(iter, dblrand() * peers.size());
         destPeer = iter->second;
     }
-    sendPacket(msg,destPeer.address,destPeer.port);
+    sendPacket(msg,&(destPeer->address),destPeer->port);
 }

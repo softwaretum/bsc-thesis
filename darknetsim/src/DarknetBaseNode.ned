@@ -15,7 +15,7 @@
 
 package darknetsim;
 
-simple DarknetBaseNode like inet.applications.udpapp.UDPApp {
+module DarknetBaseNode extends inet.applications.udpapp.UDPApp {
     parameters:
         int local_port;
         int node_id;
