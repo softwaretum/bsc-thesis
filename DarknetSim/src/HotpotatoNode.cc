@@ -21,16 +21,23 @@ Define_Module(HotpotatoNode);
 void HotpotatoNode::initialize(int stage)
 {
 
-    DarknetBaseNode::initialize(stage);
+    if(stage == 0)
+        DarknetBaseNode::initialize(stage);
 
-    std::string peerID = par("dest_ID").stdstringValue();
-    DarknetNode* peer = new DarknetNode;
-    peer->nodeID = peerID;
-    peer->address = IPAddressResolver().resolve(par("dest_address"));
-    peer->port = par("dest_port");
-    peer->active = true;
-    peers.insert(std::pair<std::string, DarknetNode*>(peerID,peer));
+    if (stage == 3) {
+        std::string peerID = par("dest_id").stdstringValue();
+        DarknetNode* peer = new DarknetNode;
+        peer->nodeID = peerID;
+        peer->address = IPAddressResolver().resolve(par("dest_address"));
+        peer->port = par("dest_port");
+        peer->active = true;
+        peers.insert(std::pair<std::string, DarknetNode*>(peerID,peer));
 
+        if(nodeID == "23") {
+            cMessage *timer = new cMessage("sendTimer");
+                scheduleAt(1.0, timer);
+        }
+    }
 }
 
 void HotpotatoNode::sendMessage(DarknetMessage* msg) {

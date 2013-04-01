@@ -31,7 +31,8 @@ void DarknetBaseNode::handleMessage(cMessage *msg)
     {
         // maybe a timer / internal message handling?
         // or a packet that we want so send..
-        sendMessage(check_and_cast<DarknetMessage*>(msg));
+        //sendMessage(check_and_cast<DarknetMessage*>(msg));
+        sendMessage(new DarknetMessage(this->nodeID, "42"));
     }
     else
     {

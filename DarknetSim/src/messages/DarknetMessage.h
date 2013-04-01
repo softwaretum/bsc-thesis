@@ -25,7 +25,8 @@ public:
     std::string srcNodeID;
     int TTL;
 
-    DarknetMessage();
+    DarknetMessage(std::string srcNodeID, std::string destNodeID, int TTL = 16);
+    DarknetMessage() {};
     virtual ~DarknetMessage();
 };
 

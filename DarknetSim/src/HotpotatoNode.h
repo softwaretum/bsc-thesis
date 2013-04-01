@@ -26,6 +26,7 @@ protected:
 
    virtual void sendMessage(DarknetMessage* msg);
    virtual void initialize(int stage);
+   virtual int numInitStages() const { return 4; }
 };
 
 #endif /* HOTPOTATONODE_H_ */

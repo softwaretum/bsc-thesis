@@ -15,9 +15,10 @@
 
 #include "DarknetMessage.h"
 
-DarknetMessage::DarknetMessage() {
-    // TODO Auto-generated constructor stub
-
+DarknetMessage::DarknetMessage(std::string srcNodeID, std::string destNodeID, int TTL) {
+    this->srcNodeID = srcNodeID;
+    this->destNodeID = destNodeID;
+    this->TTL = TTL;
 }
 
 DarknetMessage::~DarknetMessage() {
