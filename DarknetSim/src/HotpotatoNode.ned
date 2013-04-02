@@ -20,7 +20,7 @@ simple HotpotatoNode extends DarknetBaseNode {
         @class(HotpotatoNode);
         int dest_port;
         string dest_id;
-        string dest_address;
+ //       string dest_address;
         
         
 //        int local_port;

@@ -39,12 +39,12 @@ network HotPotatoTest1
         host2: StandardHost {
             @display("p=232,35");
         }
-//        host3: StandardHost {
-//            @display("p=186,135");
-//        }
+        host3: StandardHost {
+            @display("p=186,135");
+        }
     connections:
         host1.pppg++ <--> DatarateChannel <--> router.pppg++;
         router.pppg++ <--> DatarateChannel <--> host2.pppg++;
-//        router.pppg++ <--> DatarateChannel <--> host3.pppg++;
+        router.pppg++ <--> DatarateChannel <--> host3.pppg++;
 
 }

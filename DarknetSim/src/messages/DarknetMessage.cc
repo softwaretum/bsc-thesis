@@ -15,10 +15,14 @@
 
 #include "DarknetMessage.h"
 
-DarknetMessage::DarknetMessage(std::string srcNodeID, std::string destNodeID, int TTL) {
+#include <cmessage.h>
+
+DarknetMessage::DarknetMessage(std::string srcNodeID, std::string destNodeID, std::string name, int TTL) : cPacket(name.c_str()){
     this->srcNodeID = srcNodeID;
     this->destNodeID = destNodeID;
     this->TTL = TTL;
+
+    this->setByteLength(32);
 }
 
 DarknetMessage::~DarknetMessage() {

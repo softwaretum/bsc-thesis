@@ -32,17 +32,25 @@ void DarknetBaseNode::handleMessage(cMessage *msg)
         // maybe a timer / internal message handling?
         // or a packet that we want so send..
         //sendMessage(check_and_cast<DarknetMessage*>(msg));
-        sendMessage(new DarknetMessage(this->nodeID, "42"));
+        sendMessage(new DarknetMessage(this->nodeID, "host3", "trolo"));
     }
     else
     {
-        processIncomingMessage(check_and_cast<DarknetMessage*>(msg));
+        if(msg->isPacket()) {
+            printPacket((cPacket*)msg);
+            cPacket *packet = ((cPacket*)msg)->getEncapsulatedPacket();
+            if(packet!=NULL)
+                processIncomingMessage(check_and_cast<DarknetMessage*>(packet));
+            else EV << "no encapsulated packet contained..."<< endl;
+        }else EV << "uh..dont know what to do here..";
+//        }
     }
 }
 
 
 void DarknetBaseNode::processIncomingMessage(DarknetMessage *msg)
 {
+    EV << "received some DarknetMessage...";
     if (msg->destNodeID != nodeID) {
             forwardMessage(msg);
     }else {

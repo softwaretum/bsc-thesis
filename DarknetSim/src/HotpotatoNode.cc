@@ -14,6 +14,7 @@
 // 
 
 #include <IPAddressResolver.h>
+#include <cstringtokenizer.h>
 #include "HotpotatoNode.h"
 
 Define_Module(HotpotatoNode);
@@ -25,15 +26,20 @@ void HotpotatoNode::initialize(int stage)
         DarknetBaseNode::initialize(stage);
 
     if (stage == 3) {
-        std::string peerID = par("dest_id").stdstringValue();
-        DarknetNode* peer = new DarknetNode;
-        peer->nodeID = peerID;
-        peer->address = IPAddressResolver().resolve(par("dest_address"));
-        peer->port = par("dest_port");
-        peer->active = true;
-        peers.insert(std::pair<std::string, DarknetNode*>(peerID,peer));
+        //std::string peerID = par("dest_id").stdstringValue();
 
-        if(nodeID == "23") {
+        std::vector<std::string> v = cStringTokenizer(par("dest_id")).asVector();
+        for(std::vector<std::string>::iterator iter = v.begin(); iter != v.end(); iter++) {
+            DarknetNode* peer = new DarknetNode;
+            std::string peerID = (*iter);
+            peer->nodeID = peerID;
+            peer->address = IPAddressResolver().resolve(peerID.c_str());
+            peer->port = par("dest_port");
+            peer->active = true;
+            peers.insert(std::pair<std::string, DarknetNode*>(peerID,peer));
+        }
+
+        if(nodeID == "host1") {
             cMessage *timer = new cMessage("sendTimer");
                 scheduleAt(1.0, timer);
         }
@@ -43,6 +49,7 @@ void HotpotatoNode::initialize(int stage)
 void HotpotatoNode::sendMessage(DarknetMessage* msg) {
     if(!peers.size()) {
         // peer list empty -> raise exception?
+        EV << "ERROR: empty peer list!";
         return;
     }
     DarknetNode *destPeer;
