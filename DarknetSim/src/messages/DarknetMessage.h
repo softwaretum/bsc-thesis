@@ -26,8 +26,11 @@ public:
     int TTL;
 
     DarknetMessage(std::string srcNodeID, std::string destNodeID, std::string name="", int TTL = 16);
+    DarknetMessage(const DarknetMessage& orig);
     DarknetMessage() {};
     virtual ~DarknetMessage();
+
+    virtual DarknetMessage *dup() const { return new DarknetMessage(); }
 };
 
 #endif /* DARKNETMESSAGE_H_ */

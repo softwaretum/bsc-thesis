@@ -52,7 +52,7 @@ protected:
     virtual void processIncomingMessage(DarknetMessage* msg);
 
     // most likely only a wrapper around sendToUDP
-    virtual void sendPacket(cPacket* pkg, IPvXAddress& destAddr, int destPort) { sendToUDP(pkg, localPort, destAddr, destPort); }
+    virtual void sendPacket(DarknetMessage* pkg, IPvXAddress& destAddr, int destPort);
 
     virtual void handleMessage(cMessage* msg);
     virtual void initialize(int stage);

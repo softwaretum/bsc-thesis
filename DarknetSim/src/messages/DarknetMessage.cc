@@ -25,6 +25,14 @@ DarknetMessage::DarknetMessage(std::string srcNodeID, std::string destNodeID, st
     this->setByteLength(32);
 }
 
+DarknetMessage::DarknetMessage( const DarknetMessage& orig) {
+    this->srcNodeID = orig.srcNodeID;
+    this->destNodeID = orig.destNodeID;
+    this->TTL = orig.TTL;
+
+    this->setByteLength(orig.getByteLength());
+}
+
 DarknetMessage::~DarknetMessage() {
     // TODO Auto-generated destructor stub
 }

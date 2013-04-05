@@ -16,6 +16,7 @@
 #include <omnetpp.h>
 #include <IPAddressResolver.h>
 #include "DarknetBaseNode.h"
+#include <UDPPacket.h>
 //#include "UDPControlInfo_m.h"
 
 void DarknetBaseNode::initialize(int stage)
@@ -24,6 +25,16 @@ void DarknetBaseNode::initialize(int stage)
     localPort = par("local_port");
     bindToPort(localPort);
 }
+
+void DarknetBaseNode::sendPacket(DarknetMessage* dmsg, IPvXAddress& destAddr, int destPort) {
+
+    UDPPacket *pkg = new UDPPacket("udp");
+
+    pkg->setByteLength(8);
+    pkg->encapsulate(dmsg);
+    sendToUDP(pkg, localPort, destAddr, destPort);
+}
+
 
 void DarknetBaseNode::handleMessage(cMessage *msg)
 {
@@ -62,7 +73,7 @@ void DarknetBaseNode::processIncomingMessage(DarknetMessage *msg)
 void DarknetBaseNode::forwardMessage(DarknetMessage* msg) {
     if(msg->TTL > 0) {
         msg->TTL--;
-        sendMessage(msg);
+        sendMessage((DarknetMessage*)msg->dup());
     }
     // TODO: inform simulator/user of droped message
     EV << "dropped message";
