@@ -30,13 +30,13 @@ void HotpotatoNode::initialize(int stage)
 
         std::vector<std::string> v = cStringTokenizer(par("dest_id")).asVector();
         for(std::vector<std::string>::iterator iter = v.begin(); iter != v.end(); iter++) {
-            DarknetNode* peer = new DarknetNode;
+            DarknetPeer* peer = new DarknetPeer;
             std::string peerID = (*iter);
             peer->nodeID = peerID;
             peer->address = IPAddressResolver().resolve(peerID.c_str());
             peer->port = par("dest_port");
             peer->active = true;
-            peers.insert(std::pair<std::string, DarknetNode*>(peerID,peer));
+            peers.insert(std::pair<std::string, DarknetPeer*>(peerID,peer));
         }
 
         if(nodeID == "host1") {
@@ -52,11 +52,11 @@ void HotpotatoNode::sendMessage(DarknetMessage* msg) {
         EV << "ERROR: empty peer list!";
         return;
     }
-    DarknetNode *destPeer;
+    DarknetPeer *destPeer;
     if(peers.find(msg->destNodeID) != peers.end()) {
         destPeer = peers[msg->destNodeID];
     }else {
-        std::map<std::string, DarknetNode*>::iterator iter = peers.begin();
+        std::map<std::string, DarknetPeer*>::iterator iter = peers.begin();
         std::advance(iter, dblrand() * peers.size());
         destPeer = iter->second;
     }

@@ -21,22 +21,25 @@
 #include "messages/DarknetMessage.h"
 #include "messages/MaintenanceMessage.h"
 
-struct DarknetNode{
-    std::string nodeID;
-    IPvXAddress address;
-    int port;
-    bool active;
-};
+
 
 class DarknetBaseNode : public UDPAppBase  {
 public:
     DarknetBaseNode() {};
     virtual ~DarknetBaseNode() { };
+
 protected:
+    struct DarknetPeer{
+        std::string nodeID;
+        IPvXAddress address;
+        int port;
+        bool active;
+    };
 
     std::string nodeID;
     int localPort;
-    std::map<std::string, DarknetNode*> peers;
+    std::map<std::string, DarknetPeer*> peers;
+    std::map<std::string, DarknetPeer*> routingtable;
 
 
     // higher level interface for DarknetNodes
