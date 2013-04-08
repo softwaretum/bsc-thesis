@@ -1,3 +1,0 @@
-package darknetsim;
-
-@license(LGPL);

@@ -1,4 +1,0 @@
-#!/bin/sh
-cd `dirname $0`
-../src/darknet_hotpotato -n .:../src $*
-# for shared lib, use: opp_run -l ../src/darknet_hotpotato -n .:../src $*
