@@ -22,6 +22,11 @@
 #include "messages/MaintenanceMessage.h"
 
 
+typedef struct {
+    std::string nodeID;
+    IPvXAddress address;
+    int port;
+} DarknetPeer;
 
 class DarknetBaseNode : public UDPAppBase  {
 public:
@@ -29,17 +34,28 @@ public:
     virtual ~DarknetBaseNode() { };
 
 protected:
-    struct DarknetPeer{
-        std::string nodeID;
-        IPvXAddress address;
-        int port;
-        bool active;
-    };
 
     std::string nodeID;
     int localPort;
     std::map<std::string, DarknetPeer*> peers;
-    std::map<std::string, DarknetPeer*> routingtable;
+//    std::map<std::string, DarknetPeer*> routingtable;
+
+    //things you probably don't have to change
+    virtual void sendPacket(DarknetMessage* pkg, IPvXAddress& destAddr, int destPort);
+    virtual void sendMessage(DarknetMessage* msg);
+    virtual void handleMessage(cMessage* msg);
+    virtual int numInitStages() const { return 4; }
+
+
+    //things you probably want to implement or extend
+    virtual void initialize(int stage);
+    virtual void handleIncomingMessage(DarknetMessage* msg);
+    virtual void forwardMessage(DarknetMessage* msg);
+
+
+    //things you have to implement
+    virtual DarknetPeer* findNextHop(DarknetMessage* msg) = 0;
+    virtual void handleSelfMessage(cMessage* msg) = 0;
 
 
     // higher level interface for DarknetNodes
@@ -48,17 +64,7 @@ protected:
  //   virtual void handleMaintenanceMessage(MaintenanceMessage* msg);
  //   virtual void handleRequestMessage(DarknetMessage* msg);
 
-    virtual void sendMessage(DarknetMessage* msg) = 0;
-    virtual void forwardMessage(DarknetMessage* msg);
 
-
-    virtual void processIncomingMessage(DarknetMessage* msg);
-
-    // most likely only a wrapper around sendToUDP
-    virtual void sendPacket(DarknetMessage* pkg, IPvXAddress& destAddr, int destPort);
-
-    virtual void handleMessage(cMessage* msg);
-    virtual void initialize(int stage);
 };
 
 #endif /* DARKNETBASENODE_H_ */

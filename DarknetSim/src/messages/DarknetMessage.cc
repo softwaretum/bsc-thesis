@@ -25,7 +25,7 @@ DarknetMessage::DarknetMessage(std::string srcNodeID, std::string destNodeID, st
     this->setByteLength(32);
 }
 
-DarknetMessage::DarknetMessage( const DarknetMessage& orig) {
+DarknetMessage::DarknetMessage( const DarknetMessage& orig) : cPacket(orig.getName()){
     this->srcNodeID = orig.srcNodeID;
     this->destNodeID = orig.destNodeID;
     this->TTL = orig.TTL;

@@ -31,20 +31,28 @@ network HotPotatoTest1
             netmask = "255.255.0.0";
         }
         router: Router {
-            @display("p=120,63");
+            @display("p=128,94");
         }
         host1: StandardHost {
-            @display("p=52,112");
+            @display("p=35,98");
         }
         host2: StandardHost {
-            @display("p=232,35");
+            @display("p=99,153");
         }
         host3: StandardHost {
-            @display("p=186,135");
+            @display("p=208,137");
+        }
+        host4: StandardHost {
+            @display("p=208,48");
+        }
+        host5: StandardHost {
+            @display("p=113,28");
         }
     connections:
         host1.pppg++ <--> DatarateChannel <--> router.pppg++;
         router.pppg++ <--> DatarateChannel <--> host2.pppg++;
         router.pppg++ <--> DatarateChannel <--> host3.pppg++;
+        router.pppg++ <--> DatarateChannel <--> host4.pppg++;
+        router.pppg++ <--> DatarateChannel <--> host5.pppg++;
 
 }

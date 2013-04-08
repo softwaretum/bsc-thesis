@@ -14,51 +14,51 @@
 // 
 
 #include <IPAddressResolver.h>
-#include <cstringtokenizer.h>
 #include "HotpotatoNode.h"
 
 Define_Module(HotpotatoNode);
 
-void HotpotatoNode::initialize(int stage)
-{
-
-    if(stage == 0)
-        DarknetBaseNode::initialize(stage);
+void HotpotatoNode::initialize(int stage) {
+    DarknetBaseNode::initialize(stage);
 
     if (stage == 3) {
-        //std::string peerID = par("dest_id").stdstringValue();
-
-        std::vector<std::string> v = cStringTokenizer(par("dest_id")).asVector();
+        std::vector<std::string> v = cStringTokenizer(par("ping_id")).asVector();
         for(std::vector<std::string>::iterator iter = v.begin(); iter != v.end(); iter++) {
-            DarknetPeer* peer = new DarknetPeer;
-            std::string peerID = (*iter);
-            peer->nodeID = peerID;
-            peer->address = IPAddressResolver().resolve(peerID.c_str());
-            peer->port = par("dest_port");
-            peer->active = true;
-            peers.insert(std::pair<std::string, DarknetPeer*>(peerID,peer));
-        }
-
-        if(nodeID == "host1") {
-            cMessage *timer = new cMessage("sendTimer");
+            cMessage *timer = new PingTimer((*iter));
                 scheduleAt(1.0, timer);
         }
     }
 }
 
-void HotpotatoNode::sendMessage(DarknetMessage* msg) {
-    if(!peers.size()) {
-        // peer list empty -> raise exception?
+DarknetPeer* HotpotatoNode::findNextHop(DarknetMessage* msg) {
+    if(!peers.size()) { // peer list empty -> raise exception? (TODO)
         EV << "ERROR: empty peer list!";
-        return;
+        return NULL;
     }
-    DarknetPeer *destPeer;
     if(peers.find(msg->destNodeID) != peers.end()) {
-        destPeer = peers[msg->destNodeID];
+        return peers[msg->destNodeID];
     }else {
         std::map<std::string, DarknetPeer*>::iterator iter = peers.begin();
         std::advance(iter, dblrand() * peers.size());
-        destPeer = iter->second;
+        return iter->second;
     }
-    sendPacket(msg,destPeer->address,destPeer->port);
+}
+
+void HotpotatoNode::handleSelfMessage(cMessage *msg) {
+    if(dynamic_cast<PingTimer*>(msg) != NULL) {
+        sendMessage(new DarknetMessage(this->nodeID, msg->getName(), "PING"));
+//        scheduleAt(simTime()+1.0, msg);
+    }else
+        delete msg;
+}
+
+void HotpotatoNode::handleIncomingMessage(DarknetMessage *msg) {
+    if (msg->destNodeID != nodeID) {
+            forwardMessage(msg);
+    }else {
+        std::string p = "PING";
+        if(p.compare(msg->getName()) == 0)
+            EV << "received PING from " << msg->srcNodeID;
+        else DarknetBaseNode::handleIncomingMessage(msg);
+    }
 }

@@ -18,15 +18,23 @@
 
 #include "DarknetBaseNode.h"
 
+
+class PingTimer: public cMessage {
+public:
+    PingTimer(std::string name) : cMessage(name.c_str()) {};
+};
+
+
 class HotpotatoNode: public DarknetBaseNode {
 public:
    HotpotatoNode() : DarknetBaseNode::DarknetBaseNode() {};
    virtual ~HotpotatoNode() {};
 protected:
 
-   virtual void sendMessage(DarknetMessage* msg);
+   virtual DarknetPeer* findNextHop(DarknetMessage* msg);
    virtual void initialize(int stage);
-   virtual int numInitStages() const { return 4; }
+   virtual void handleSelfMessage(cMessage* msg);
+   virtual void handleIncomingMessage(DarknetMessage* msg);
 };
 
 #endif /* HOTPOTATONODE_H_ */

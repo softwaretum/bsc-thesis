@@ -30,7 +30,7 @@ public:
     DarknetMessage() {};
     virtual ~DarknetMessage();
 
-    virtual DarknetMessage *dup() const { return new DarknetMessage(); }
+    virtual DarknetMessage *dup() const { return new DarknetMessage(*this); }
 };
 
 #endif /* DARKNETMESSAGE_H_ */

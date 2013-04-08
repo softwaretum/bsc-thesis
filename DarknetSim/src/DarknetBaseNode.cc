@@ -17,64 +17,74 @@
 #include <IPAddressResolver.h>
 #include "DarknetBaseNode.h"
 #include <UDPPacket.h>
-//#include "UDPControlInfo_m.h"
+#include <cstringtokenizer.h>
 
-void DarknetBaseNode::initialize(int stage)
-{
-    nodeID = par("node_id").stdstringValue();
-    localPort = par("local_port");
-    bindToPort(localPort);
+void DarknetBaseNode::initialize(int stage) {
+    if(stage == 0) {
+        nodeID = par("node_id").stdstringValue();
+        localPort = par("local_port");
+        bindToPort(localPort);
+    }else if (stage == 3) {
+        const char* port_delimiter = ":";
+        std::vector<std::string> v = cStringTokenizer(par("dest_id")).asVector();
+        for(std::vector<std::string>::iterator iter = v.begin(); iter != v.end(); iter++) {
+            std::vector<std::string> peer_tuple = cStringTokenizer((*iter).c_str(),port_delimiter).asVector(); //split <destID>:<destPort>
+            if(peer_tuple.size() == 2) {
+                DarknetPeer* peer = new DarknetPeer;
+                peer->nodeID = peer_tuple[0];
+                peer->address = IPAddressResolver().resolve(peer->nodeID.c_str());
+                std::istringstream convert(peer_tuple[1]);
+                int port;
+                peer->port = convert >> port ? port : 0;  //convert string to int (user 0 on error)
+                peers.insert(std::pair<std::string, DarknetPeer*>(peer->nodeID,peer));
+            }
+        }
+    }
 }
 
 void DarknetBaseNode::sendPacket(DarknetMessage* dmsg, IPvXAddress& destAddr, int destPort) {
-
-    UDPPacket *pkg = new UDPPacket("udp");
-
-    pkg->setByteLength(8);
-    pkg->encapsulate(dmsg);
-    sendToUDP(pkg, localPort, destAddr, destPort);
+    sendToUDP(dmsg, localPort, destAddr, destPort);
 }
 
-
-void DarknetBaseNode::handleMessage(cMessage *msg)
-{
-    if (msg->isSelfMessage())
-    {
-        // maybe a timer / internal message handling?
-        // or a packet that we want so send..
-        //sendMessage(check_and_cast<DarknetMessage*>(msg));
-        sendMessage(new DarknetMessage(this->nodeID, "host3", "trolo"));
-    }
-    else
-    {
-        if(msg->isPacket()) {
-            printPacket((cPacket*)msg);
-            cPacket *packet = ((cPacket*)msg)->getEncapsulatedPacket();
-            if(packet!=NULL)
-                processIncomingMessage(check_and_cast<DarknetMessage*>(packet));
-            else EV << "no encapsulated packet contained..."<< endl;
-        }else EV << "uh..dont know what to do here..";
-//        }
+void DarknetBaseNode::sendMessage(DarknetMessage* msg) {
+    DarknetPeer *destPeer = findNextHop(msg);
+    if(destPeer != NULL)
+        sendPacket(msg,destPeer->address,destPeer->port);
+    else {
+        EV << "No next hop found for message: " << msg;
+        //TODO: implement proper default error handling here
+        delete msg;
     }
 }
 
+void DarknetBaseNode::handleMessage(cMessage *msg) {
+    if (msg->isSelfMessage()) {
+        handleSelfMessage(msg);
+    } else if(dynamic_cast<DarknetMessage*>(msg) != NULL) {
+        handleIncomingMessage(check_and_cast<DarknetMessage*>(msg));
+    } else {
+       EV << "received an unknown cMessage: " << msg;
+       delete msg;
+   }
 
-void DarknetBaseNode::processIncomingMessage(DarknetMessage *msg)
-{
-    EV << "received some DarknetMessage...";
+}
+
+void DarknetBaseNode::handleIncomingMessage(DarknetMessage *msg) {
     if (msg->destNodeID != nodeID) {
             forwardMessage(msg);
     }else {
-        //distinguish MessageTypes
-       EV << "received message for this node! YAY :D";
+       EV << "received unknwon DarknetMessage for this node: " << msg;
+       delete msg;
     }
 }
 
 void DarknetBaseNode::forwardMessage(DarknetMessage* msg) {
     if(msg->TTL > 0) {
         msg->TTL--;
-        sendMessage((DarknetMessage*)msg->dup());
+        sendMessage(((DarknetMessage*)msg)->dup());
+    }else {
+        // TODO: inform simulator/user of droped message
+        EV << "dropped message";
     }
-    // TODO: inform simulator/user of droped message
-    EV << "dropped message";
+    delete msg;
 }

@@ -18,8 +18,8 @@ package darknetsim;
 simple HotpotatoNode extends DarknetBaseNode {
     parameters:
         @class(HotpotatoNode);
-        int dest_port;
         string dest_id;
+        string ping_id;
  //       string dest_address;
         
         
