@@ -35,6 +35,7 @@ protected:
    virtual void initialize(int stage);
    virtual void handleSelfMessage(cMessage* msg);
    virtual void handleIncomingMessage(DarknetMessage* msg);
+   virtual void connectPeer(std::string nodeID, IPvXAddress* destAddr = NULL, int destPort = 0) {}; //do nothing
 };
 
 #endif /* HOTPOTATONODE_H_ */
