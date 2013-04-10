@@ -1,0 +1,55 @@
+Fragen
+======
+
+Was sind unsere Ziele
+---------------------
+Routingalgorythmen für Darknetze vergleichbar und damit in der Praxis auch besser optimierbar machen. Dazu gehört neben durchschnittlichen Werten auch worst case Fälle messen und Vergleichen können.  
+
+
+Welche Metriken benutzen wir?
+-----------------------------
+(beim routing zb hop länge gefundener Pfad, delay des routing, insgesammt kontaktierte Knoten)
+Zusätzlich sollte gemessen werden, wie teuer (zeitlich, Anzahl der Pakete/kontaktierten Knoten) ein Bootstrap ist.
+
+Eventuell wären auch Messungen Interessant, die das Verhalten bei/nach Ausfällen/Angriffen zeigen. Dabei geht es vor allem um das Verhalten bei Ausfall stark vernetzer Knoten oder gar eine komplette Abtrennung eines Teilnetzes.
+
+
+Welche Parameter haben wir?
+---------------------------
+* Anzahl der Knoten
+* Anzahl der (maximalen) Verbindungen
+* Verteilung der Verbindungen / Grad der Einbettung (stärke der Clusterung)
+** eventuell Maximale Länge zwischen 2 Knoten
+* Workload (Anfragenhäufigkeit)
+* Packetgröße
+
+Wir können auch im Laufe der Simulation die Topologie ändern und so Anriffe/Ausfälle simulieren.
+
+Neben diesen generellen Parameter können verschiedene Verfahren weitere Parameter haben, die das Verhalten einzelner Knoten bestimmen. Diese sind Verfahrensabhängig und könnten zb eine TTL für Packete oder die Anzahl der parallel Kontaktierten Nodes sein.
+
+
+Welche Parameter wollen wir variieren?
+--------------------------------------
+Es ist sowohl interessant die gleichen Verfahren in unterschiedlichen Simulationen (also zb unterschiedliche Netzgröße) als auch unterschiedliche Verfahren (ggf auch das gleiche Verfahren mit anders eingestellten Parametern) in den gleichen Simulationen zu betrachten.
+
+Eventuell lässt man erstmal den ganzen Part bezüglich Angriff/Ausfall-Wiederstandsfähigkeit, da zu Umfangreich für BA (eigentlich interessantes Thema, wenn weglassen, eventuell später?)
+
+
+Welche workload setzen wir an?
+------------------------------
+(Anfragenhäufigkeit?)
+
+
+
+Weitere TODOs in Omnet
+======================
+
+DarknetBaseNode
+---------------
+* einfache/abstrakte Routingtabelle die mindestens Up/Down-Status von Peers/Links speichert
+* Nachrichtenübermittlung (ein einfaches Request/Response ohne Inhalte sollte genügen und bereits viele Darknetze genügend gut abbilden)
+* periodischen Timer (in dem man zB Maintenance-Foobar triggern kann)
+
+HotpotatoNode
+-------------
+* ConnectPeer sollte min. Ping senden und erst auf Pong den Node zu den aktiven Peers hinzufügen
