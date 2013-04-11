@@ -49,7 +49,14 @@ DarknetBaseNode
 * einfache/abstrakte Routingtabelle die mindestens Up/Down-Status von Peers/Links speichert
 * Nachrichtenübermittlung (ein einfaches Request/Response ohne Inhalte sollte genügen und bereits viele Darknetze genügend gut abbilden)
 * periodischen Timer (in dem man zB Maintenance-Foobar triggern kann)
+* Aufzeichnen des Pfades in DarknetMessage
+* (beschränkte) Liste der gesehenen Messages in DarknetBaseNode
+
 
 HotpotatoNode
 -------------
 * ConnectPeer sollte min. Ping senden und erst auf Pong den Node zu den aktiven Peers hinzufügen
+
+* Unterteilung in MaintenanceMessage und Daten/Request?/BlabfaselMessage (ContentMessage?)
+* Sammeln&Aufzeichnen von Messwerten (Pfadlänge, Packetanzahl etc)
+* Netzwerktopologie aus Graphen erzeugen
