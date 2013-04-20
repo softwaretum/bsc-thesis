@@ -92,9 +92,9 @@ void DarknetBaseNode::handleIncomingMessage(DarknetMessage *msg) {
         break;
      default:
        EV << "received unknown DarknetMessage for this node: " << msg;
+       delete msg;
        break;
     }
-    delete msg;
 }
 
 void DarknetBaseNode::forwardMessage(DarknetMessage* msg) {
@@ -115,7 +115,6 @@ DarknetMessage* DarknetBaseNode::makeRequest(std::string nodeID) {
     msg->setDestNodeID(nodeID.c_str());
     msg->setType(DM_REQUEST);
     return msg;
-    sendMessage(msg);
 }
 
 void DarknetBaseNode::handleRequest(DarknetMessage* request) {
@@ -123,5 +122,7 @@ void DarknetBaseNode::handleRequest(DarknetMessage* request) {
     msg->setSrcNodeID(this->nodeID.c_str());
     msg->setDestNodeID(request->getSrcNodeID());
     msg->setType(DM_RESPONSE);
+    msg->encapsulate(request->dup());
+    delete request;
     sendMessage(msg);
 }

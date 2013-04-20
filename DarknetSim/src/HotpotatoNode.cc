@@ -56,6 +56,7 @@ void HotpotatoNode::handleIncomingMessage(DarknetMessage *msg) {
     switch(msg->getType()) {
     case DM_RESPONSE:
         EV << "recieved PONG from: " << msg->getSrcNodeID() << endl;
+        delete msg;
         break;
      default:
        DarknetBaseNode::handleIncomingMessage(msg);
