@@ -30,13 +30,14 @@ void HotpotatoNode::initialize(int stage) {
     }
 }
 
+
 DarknetPeer* HotpotatoNode::findNextHop(DarknetMessage* msg) {
     if(!peers.size()) { // peer list empty -> raise exception? (TODO)
         EV << "ERROR: empty peer list!";
         return NULL;
     }
-    if(peers.find(msg->destNodeID) != peers.end()) {
-        return peers[msg->destNodeID];
+    if(peers.find(msg->getDestNodeID()) != peers.end()) {
+        return peers[msg->getDestNodeID()];
     }else {
         std::map<std::string, DarknetPeer*>::iterator iter = peers.begin();
         std::advance(iter, dblrand() * peers.size());
@@ -46,19 +47,18 @@ DarknetPeer* HotpotatoNode::findNextHop(DarknetMessage* msg) {
 
 void HotpotatoNode::handleSelfMessage(cMessage *msg) {
     if(dynamic_cast<PingTimer*>(msg) != NULL) {
-        sendMessage(new DarknetMessage(this->nodeID, msg->getName(), "PING"));
-//        scheduleAt(simTime()+1.0, msg);
-    }else
-        delete msg;
+        sendMessage(makeRequest(msg->getName()));
+    }
+    delete msg;
 }
 
 void HotpotatoNode::handleIncomingMessage(DarknetMessage *msg) {
-    if (msg->destNodeID != nodeID) {
-            forwardMessage(msg);
-    }else {
-        std::string p = "PING";
-        if(p.compare(msg->getName()) == 0)
-            EV << "received PING from " << msg->srcNodeID;
-        else DarknetBaseNode::handleIncomingMessage(msg);
+    switch(msg->getType()) {
+    case DM_RESPONSE:
+        EV << "recieved PONG from: " << msg->getSrcNodeID() << endl;
+        break;
+     default:
+       DarknetBaseNode::handleIncomingMessage(msg);
+       break;
     }
 }

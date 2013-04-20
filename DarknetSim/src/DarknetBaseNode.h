@@ -18,15 +18,23 @@
 
 #include <omnetpp.h>
 #include <UDPAppBase.h>
-#include "messages/DarknetMessage.h"
-#include "messages/MaintenanceMessage.h"
-
+//#include "messages/DarknetMessage.h"
+//#include "messages/MaintenanceMessage.h"
+#include "darknetmessage_m.h"
 
 typedef struct {
     std::string nodeID;
     IPvXAddress address;
     int port;
 } DarknetPeer;
+
+//typedef struct {
+//    std::string nodeID;
+//    IPvXAddress address;
+//    int port;
+//    simtime_t lastSeen;
+//} DarknetConnection;
+
 
 class DarknetBaseNode : public UDPAppBase  {
 public:
@@ -38,7 +46,7 @@ protected:
     std::string nodeID;
     int localPort;
     std::map<std::string, DarknetPeer*> peers;
-//    std::map<std::string, DarknetPeer*> routingtable;
+//    std::map<std::string, DarknetPeer*> connections;
 
     //things you probably don't have to change
     virtual void sendPacket(DarknetMessage* pkg, IPvXAddress& destAddr, int destPort);
@@ -46,11 +54,14 @@ protected:
     virtual void handleMessage(cMessage* msg);
     virtual int numInitStages() const { return 4; }
     virtual void addPeer(std::string nodeID, IPvXAddress& destAddr, int destPort);
+    virtual DarknetMessage* makeRequest(std::string nodeID);
 
 
     //things you probably want to implement or extend
     virtual void initialize(int stage);
     virtual void handleIncomingMessage(DarknetMessage* msg);
+    virtual void handleForeignMessage(DarknetMessage* msg) { forwardMessage(msg); };
+    virtual void handleRequest(DarknetMessage* msg);
     virtual void forwardMessage(DarknetMessage* msg);
 
 

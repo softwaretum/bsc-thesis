@@ -13,15 +13,24 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#ifndef MAINTENANCEMESSAGE_H_
-#define MAINTENANCEMESSAGE_H_
 
-#include "messages/DarknetMessage.h"
+enum DarknetMessageType {
+    DM_UNKNOWN = 0;
+    
+    //DATA MESSAGES
+    DM_REQUEST = 10;
+    DM_RESPONSE = 11;
+    
+    //MAINTENANCE_MESSAGES
+    DM_CON_SYN = 20;
+    DM_CON_ACK = 21;
+}
 
-class MaintenanceMessage: public DarknetMessage {
-public:
-    MaintenanceMessage();
-    virtual ~MaintenanceMessage();
-};
-
-#endif /* MAINTENANCEMESSAGE_H_ */
+packet DarknetMessage {
+//    @customize(true);  // see the generated C++ header for more info
+    string destNodeID;
+    string srcNodeID;
+    int TTL = 32;
+    int type @enum(DarknetMessageType);
+    string visitedNodes[];
+}

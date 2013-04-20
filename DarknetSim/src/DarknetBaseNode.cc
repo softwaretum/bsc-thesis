@@ -57,9 +57,12 @@ void DarknetBaseNode::addPeer(std::string nodeID, IPvXAddress& destAddr, int des
 
 void DarknetBaseNode::sendMessage(DarknetMessage* msg) {
     DarknetPeer *destPeer = findNextHop(msg);
-    if(destPeer != NULL)
+    if(destPeer != NULL) {
+        int size = msg->getVisitedNodesArraySize();
+        msg->setVisitedNodesArraySize(size+1);
+        msg->setVisitedNodes(size,this->nodeID.c_str());
         sendPacket(msg,destPeer->address,destPeer->port);
-    else {
+    } else {
         EV << "No next hop found for message: " << msg;
         //TODO: implement proper default error handling here
         delete msg;
@@ -69,31 +72,56 @@ void DarknetBaseNode::sendMessage(DarknetMessage* msg) {
 void DarknetBaseNode::handleMessage(cMessage *msg) {
     if (msg->isSelfMessage()) {
         handleSelfMessage(msg);
-    } else if(dynamic_cast<DarknetMessage*>(msg) != NULL) {
-        handleIncomingMessage(check_and_cast<DarknetMessage*>(msg));
     } else {
-       EV << "received an unknown cMessage: " << msg;
-       delete msg;
-   }
-
-}
-
-void DarknetBaseNode::handleIncomingMessage(DarknetMessage *msg) {
-    if (msg->destNodeID != nodeID) {
-            forwardMessage(msg);
-    }else {
-       EV << "received unknwon DarknetMessage for this node: " << msg;
-       delete msg;
+        DarknetMessage* dm = dynamic_cast<DarknetMessage*>(msg);
+        if( dm != NULL) {
+            if (dm->getDestNodeID() != nodeID) {
+                    handleForeignMessage(dm);
+            }else handleIncomingMessage(dm);
+        } else {
+            EV << "received an unknown cMessage: " << msg;
+            delete msg;
+        }
     }
 }
 
+void DarknetBaseNode::handleIncomingMessage(DarknetMessage *msg) {
+    switch(msg->getType()) {
+    case DM_REQUEST:
+        handleRequest(msg);
+        break;
+     default:
+       EV << "received unknown DarknetMessage for this node: " << msg;
+       break;
+    }
+    delete msg;
+}
+
 void DarknetBaseNode::forwardMessage(DarknetMessage* msg) {
-    if(msg->TTL > 0) {
-        msg->TTL--;
+    int ttl = msg->getTTL();
+    if(ttl > 0) {
+        msg->setTTL(ttl-1);
         sendMessage(((DarknetMessage*)msg)->dup());
     }else {
         // TODO: inform simulator/user of droped message
         EV << "dropped message";
     }
     delete msg;
+}
+
+DarknetMessage* DarknetBaseNode::makeRequest(std::string nodeID) {
+    DarknetMessage *msg = new DarknetMessage();
+    msg->setSrcNodeID(this->nodeID.c_str());
+    msg->setDestNodeID(nodeID.c_str());
+    msg->setType(DM_REQUEST);
+    return msg;
+    sendMessage(msg);
+}
+
+void DarknetBaseNode::handleRequest(DarknetMessage* request) {
+    DarknetMessage *msg = new DarknetMessage();
+    msg->setSrcNodeID(this->nodeID.c_str());
+    msg->setDestNodeID(request->getSrcNodeID());
+    msg->setType(DM_RESPONSE);
+    sendMessage(msg);
 }
