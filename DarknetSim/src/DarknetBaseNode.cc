@@ -20,11 +20,13 @@
 #include <cstringtokenizer.h>
 
 void DarknetBaseNode::initialize(int stage) {
-    if(stage == 0) {
+    switch (stage) {
+    case 0:
         nodeID = par("node_id").stdstringValue();
         localPort = par("local_port");
         bindToPort(localPort);
-    }else if (stage == 3) {
+        break;
+    case 3: {
         const char* port_delimiter = ":";
         std::vector<std::string> v = cStringTokenizer(par("dest_id")).asVector();
         for(std::vector<std::string>::iterator iter = v.begin(); iter != v.end(); iter++) {
@@ -39,7 +41,14 @@ void DarknetBaseNode::initialize(int stage) {
             }else {
                 EV << "Error on parsing peer list; this peer seems malformed: " << (*iter);
             }
+        }}
+        break;
+    case 4:
+        for(std::map<std::string, DarknetPeer*>::iterator iter = peers.begin(); iter != peers.end(); iter++) {
+            DarknetPeer* peer = iter->second;
+            connectPeer(peer->nodeID,&peer->address,peer->port);
         }
+        break;
     }
 }
 

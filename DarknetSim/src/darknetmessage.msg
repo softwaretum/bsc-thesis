@@ -24,6 +24,8 @@ enum DarknetMessageType {
     //MAINTENANCE_MESSAGES
     DM_CON_SYN = 20;
     DM_CON_ACK = 21;
+    
+    DM_FORWARD = 30;
 }
 
 packet DarknetMessage {

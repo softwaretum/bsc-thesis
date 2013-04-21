@@ -28,12 +28,10 @@ typedef struct {
     int port;
 } DarknetPeer;
 
-//typedef struct {
-//    std::string nodeID;
-//    IPvXAddress address;
-//    int port;
-//    simtime_t lastSeen;
-//} DarknetConnection;
+typedef struct {
+    std::string nodeID;
+    simtime_t lastSeen;
+} DarknetConnection;
 
 
 class DarknetBaseNode : public UDPAppBase  {
@@ -46,13 +44,13 @@ protected:
     std::string nodeID;
     int localPort;
     std::map<std::string, DarknetPeer*> peers;
-//    std::map<std::string, DarknetPeer*> connections;
+    std::map<std::string, DarknetConnection*> connections;
 
     //things you probably don't have to change
+    virtual int numInitStages() const { return 5; }
     virtual void sendPacket(DarknetMessage* pkg, IPvXAddress& destAddr, int destPort);
     virtual void sendMessage(DarknetMessage* msg);
     virtual void handleMessage(cMessage* msg);
-    virtual int numInitStages() const { return 4; }
     virtual void addPeer(std::string nodeID, IPvXAddress& destAddr, int destPort);
     virtual DarknetMessage* makeRequest(std::string nodeID);
 
@@ -66,16 +64,9 @@ protected:
 
 
     //things you have to implement
-    virtual void connectPeer(std::string nodeID, IPvXAddress* destAddr = NULL, int destPort = 0) = 0;
+    virtual void connectPeer(std::string nodeID, IPvXAddress* destAddr, int destPort) = 0;
     virtual DarknetPeer* findNextHop(DarknetMessage* msg) = 0;
     virtual void handleSelfMessage(cMessage* msg) = 0;
-
-
-    // higher level interface for DarknetNodes
- //   virtual void connectPeer(IPvXAddress* destAddr, int destPort);
-
- //   virtual void handleMaintenanceMessage(MaintenanceMessage* msg);
- //   virtual void handleRequestMessage(DarknetMessage* msg);
 
 
 };

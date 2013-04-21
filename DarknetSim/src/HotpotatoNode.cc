@@ -21,7 +21,7 @@ Define_Module(HotpotatoNode);
 void HotpotatoNode::initialize(int stage) {
     DarknetBaseNode::initialize(stage);
 
-    if (stage == 3) {
+    if (stage == 5) {
         std::vector<std::string> v = cStringTokenizer(par("ping_id")).asVector();
         for(std::vector<std::string>::iterator iter = v.begin(); iter != v.end(); iter++) {
             cMessage *timer = new PingTimer((*iter));
@@ -30,18 +30,26 @@ void HotpotatoNode::initialize(int stage) {
     }
 }
 
+void HotpotatoNode::connectPeer(std::string nodeID, IPvXAddress* destAddr, int destPort) {
+    DarknetMessage *dm = new DarknetMessage();
+    dm->setType(DM_CON_SYN);
+    dm->setSrcNodeID(this->nodeID.c_str());
+    dm->setDestNodeID(nodeID.c_str());
+    sendPacket(dm, *destAddr, destPort);
+//    sendMessage(dm);
+};
 
 DarknetPeer* HotpotatoNode::findNextHop(DarknetMessage* msg) {
-    if(!peers.size()) { // peer list empty -> raise exception? (TODO)
+    if(!connections.size()) { // peer list empty -> raise exception? (TODO)
         EV << "ERROR: empty peer list!";
         return NULL;
     }
-    if(peers.find(msg->getDestNodeID()) != peers.end()) {
+    if(peers.find(msg->getDestNodeID()) != peers.end() and connections.find(msg->getDestNodeID()) != connections.end()) {
         return peers[msg->getDestNodeID()];
     }else {
-        std::map<std::string, DarknetPeer*>::iterator iter = peers.begin();
-        std::advance(iter, dblrand() * peers.size());
-        return iter->second;
+        std::map<std::string, DarknetConnection*>::iterator iter = connections.begin();
+        std::advance(iter, dblrand() * connections.size());
+        return peers[iter->first];
     }
 }
 
@@ -58,7 +66,28 @@ void HotpotatoNode::handleIncomingMessage(DarknetMessage *msg) {
         EV << "recieved PONG from: " << msg->getSrcNodeID() << endl;
         delete msg;
         break;
-     default:
+    case DM_CON_SYN: {
+        if(peers.find(msg->getSrcNodeID()) != peers.end()) {
+            EV << "recieved CON_SYN from: " << msg->getSrcNodeID() << endl;
+            DarknetPeer *peer = peers[msg->getSrcNodeID()];
+            DarknetMessage *dm = new DarknetMessage();
+            dm->setType(DM_CON_ACK);
+            dm->setSrcNodeID(msg->getDestNodeID());
+            dm->setDestNodeID(msg->getSrcNodeID());
+            sendPacket(dm,peer->address,peer->port);
+        }
+        break;
+    }
+    case DM_CON_ACK: {
+        DarknetConnection *dc = new DarknetConnection;
+        dc->nodeID = msg->getSrcNodeID();
+        dc->lastSeen=0; //TODO fix
+        connections.insert(std::pair<std::string,DarknetConnection*>(msg->getSrcNodeID(),dc));
+        EV << "connection to " << dc->nodeID << "established" << endl;
+        delete msg;
+        break;
+    }
+    default:
        DarknetBaseNode::handleIncomingMessage(msg);
        break;
     }

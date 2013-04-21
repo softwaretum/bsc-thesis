@@ -31,11 +31,12 @@ public:
    virtual ~HotpotatoNode() {};
 protected:
 
+   virtual int numInitStages() const { return 6; }
    virtual DarknetPeer* findNextHop(DarknetMessage* msg);
    virtual void initialize(int stage);
    virtual void handleSelfMessage(cMessage* msg);
    virtual void handleIncomingMessage(DarknetMessage* msg);
-   virtual void connectPeer(std::string nodeID, IPvXAddress* destAddr = NULL, int destPort = 0) {}; //do nothing
+   virtual void connectPeer(std::string nodeID, IPvXAddress* destAddr, int destPort); //do nothing
 };
 
 #endif /* HOTPOTATONODE_H_ */
