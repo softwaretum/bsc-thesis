@@ -41,10 +41,23 @@ public:
 
 protected:
 
+    //functor for connectPeer(...)
+    struct PeerConnector {
+        PeerConnector(DarknetBaseNode &node) : node(node) {}
+
+        //ideally DarknetPeer&-operand and boost::adaptors::map_values
+        void operator()(std::map<std::string, DarknetPeer>::value_type &to) {
+            DarknetPeer &toNode = to.second;
+            node.connectPeer(toNode.nodeID, &toNode.address, toNode.port);
+        }
+
+        DarknetBaseNode &node;
+    };
+
     std::string nodeID;
     int localPort;
-    std::map<std::string, DarknetPeer*> peers;
-    std::map<std::string, DarknetConnection*> connections;
+    std::map<std::string, DarknetPeer> peers;
+    std::map<std::string, DarknetConnection> connections;
 
     //things you probably don't have to change
     virtual int numInitStages() const { return 5; }

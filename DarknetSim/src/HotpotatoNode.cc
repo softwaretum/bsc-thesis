@@ -44,12 +44,14 @@ DarknetPeer* HotpotatoNode::findNextHop(DarknetMessage* msg) {
         EV << "ERROR: empty peer list!";
         return NULL;
     }
-    if(peers.find(msg->getDestNodeID()) != peers.end() and connections.find(msg->getDestNodeID()) != connections.end()) {
-        return peers[msg->getDestNodeID()];
+    std::map<std::string, DarknetPeer>::iterator destPeer = peers.find(msg->getDestNodeID());
+    if(destPeer != peers.end() and connections.find(msg->getDestNodeID()) != connections.end()) {
+        return &destPeer->second;
     }else {
-        std::map<std::string, DarknetConnection*>::iterator iter = connections.begin();
+        std::map<std::string, DarknetConnection>::iterator iter = connections.begin();
         std::advance(iter, dblrand() * connections.size());
-        return peers[iter->first];
+        //assert(peers.find(iter->first) != peers.end()); ?
+        return &peers[iter->first];
     }
 }
 
@@ -67,23 +69,23 @@ void HotpotatoNode::handleIncomingMessage(DarknetMessage *msg) {
         delete msg;
         break;
     case DM_CON_SYN: {
-        if(peers.find(msg->getSrcNodeID()) != peers.end()) {
-            DarknetPeer *peer = peers[msg->getSrcNodeID()];
+        std::map<std::string, DarknetPeer>::iterator peerIter = peers.find(msg->getSrcNodeID());
+        if(peerIter != peers.end()) {
             EV << "received CON_SYN from: " << msg->getSrcNodeID() << endl;
+            DarknetPeer& peer = peerIter->second;
             DarknetMessage *dm = new DarknetMessage();
             dm->setType(DM_CON_ACK);
             dm->setSrcNodeID(msg->getDestNodeID());
             dm->setDestNodeID(msg->getSrcNodeID());
-            sendPacket(dm,peer->address,peer->port);
+            sendPacket(dm,peer.address,peer.port);
         }
         break;
     }
     case DM_CON_ACK: {
-        DarknetConnection *dc = new DarknetConnection;
-        dc->nodeID = msg->getSrcNodeID();
-        dc->lastSeen=0; //TODO fix
-        connections.insert(std::pair<std::string,DarknetConnection*>(msg->getSrcNodeID(),dc));
-        EV << "connection to " << dc->nodeID << "established" << endl;
+        DarknetConnection& dc = connections[msg->getSrcNodeID()];
+        dc.nodeID = msg->getSrcNodeID();
+        dc.lastSeen=0; //TODO fix
+        EV << "connection to " << dc.nodeID << "established" << endl;
         delete msg;
         break;
     }

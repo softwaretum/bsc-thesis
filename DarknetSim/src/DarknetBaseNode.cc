@@ -18,6 +18,7 @@
 #include "DarknetBaseNode.h"
 #include <UDPPacket.h>
 #include <cstringtokenizer.h>
+#include <algorithm>
 
 void DarknetBaseNode::initialize(int stage) {
     switch (stage) {
@@ -44,10 +45,7 @@ void DarknetBaseNode::initialize(int stage) {
         }}
         break;
     case 4:
-        for(std::map<std::string, DarknetPeer*>::iterator iter = peers.begin(); iter != peers.end(); iter++) {
-            DarknetPeer* peer = iter->second;
-            connectPeer(peer->nodeID,&peer->address,peer->port);
-        }
+        std::for_each(peers.begin(), peers.end(), PeerConnector(*this));
         break;
     }
 }
@@ -57,11 +55,10 @@ void DarknetBaseNode::sendPacket(DarknetMessage* dmsg, IPvXAddress& destAddr, in
 }
 
 void DarknetBaseNode::addPeer(std::string nodeID, IPvXAddress& destAddr, int destPort) {
-    DarknetPeer* peer = new DarknetPeer;
-    peer->nodeID = nodeID;
-    peer->address = destAddr;
-    peer->port = destPort;
-    peers.insert(std::pair<std::string, DarknetPeer*>(nodeID,peer));
+    DarknetPeer& peer = peers[nodeID];
+    peer.nodeID = nodeID;
+    peer.address = destAddr;
+    peer.port = destPort;
 }
 
 void DarknetBaseNode::sendMessage(DarknetMessage* msg) {
