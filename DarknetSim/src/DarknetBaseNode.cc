@@ -112,7 +112,7 @@ void DarknetBaseNode::forwardMessage(DarknetMessage* msg) {
         msg->setTTL(ttl-1);
         sendMessage(((DarknetMessage*)msg)->dup());
     }else {
-        // TODO: inform simulator/user of droped message
+        // TODO: inform simulator/user of dropped message
         EV << "dropped message";
     }
     delete msg;

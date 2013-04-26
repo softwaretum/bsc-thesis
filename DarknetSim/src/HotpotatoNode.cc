@@ -63,13 +63,13 @@ void HotpotatoNode::handleSelfMessage(cMessage *msg) {
 void HotpotatoNode::handleIncomingMessage(DarknetMessage *msg) {
     switch(msg->getType()) {
     case DM_RESPONSE:
-        EV << "recieved PONG from: " << msg->getSrcNodeID() << endl;
+        EV << "received PONG from: " << msg->getSrcNodeID() << endl;
         delete msg;
         break;
     case DM_CON_SYN: {
         if(peers.find(msg->getSrcNodeID()) != peers.end()) {
-            EV << "recieved CON_SYN from: " << msg->getSrcNodeID() << endl;
             DarknetPeer *peer = peers[msg->getSrcNodeID()];
+            EV << "received CON_SYN from: " << msg->getSrcNodeID() << endl;
             DarknetMessage *dm = new DarknetMessage();
             dm->setType(DM_CON_ACK);
             dm->setSrcNodeID(msg->getDestNodeID());
