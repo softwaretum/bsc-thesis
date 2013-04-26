@@ -22,16 +22,16 @@
 //#include "messages/MaintenanceMessage.h"
 #include "darknetmessage_m.h"
 
-typedef struct {
+struct DarknetPeer {
     std::string nodeID;
     IPvXAddress address;
     int port;
-} DarknetPeer;
+};
 
-typedef struct {
+struct DarknetConnection {
     std::string nodeID;
     simtime_t lastSeen;
-} DarknetConnection;
+};
 
 
 class DarknetBaseNode : public UDPAppBase  {
