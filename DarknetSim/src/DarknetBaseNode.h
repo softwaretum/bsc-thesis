@@ -64,8 +64,8 @@ protected:
     virtual void sendPacket(DarknetMessage* pkg, IPvXAddress& destAddr, int destPort);
     virtual void sendMessage(DarknetMessage* msg);
     virtual void handleMessage(cMessage* msg);
-    virtual void addPeer(std::string nodeID, IPvXAddress& destAddr, int destPort);
-    virtual DarknetMessage* makeRequest(std::string nodeID);
+    virtual void addPeer(const std::string& nodeID, IPvXAddress& destAddr, int destPort);
+    virtual DarknetMessage* makeRequest(const std::string& nodeID);
 
 
     //things you probably want to implement or extend
@@ -77,7 +77,7 @@ protected:
 
 
     //things you have to implement
-    virtual void connectPeer(std::string nodeID, IPvXAddress* destAddr, int destPort) = 0;
+    virtual void connectPeer(const std::string& nodeID, IPvXAddress* destAddr, int destPort) = 0;
     virtual DarknetPeer* findNextHop(DarknetMessage* msg) = 0;
     virtual void handleSelfMessage(cMessage* msg) = 0;
 

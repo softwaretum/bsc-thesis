@@ -30,7 +30,7 @@ void HotpotatoNode::initialize(int stage) {
     }
 }
 
-void HotpotatoNode::connectPeer(std::string nodeID, IPvXAddress* destAddr, int destPort) {
+void HotpotatoNode::connectPeer(const std::string& nodeID, IPvXAddress* destAddr, int destPort) {
     DarknetMessage *dm = new DarknetMessage();
     dm->setType(DM_CON_SYN);
     dm->setSrcNodeID(this->nodeID.c_str());

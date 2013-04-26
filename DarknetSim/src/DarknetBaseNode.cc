@@ -33,10 +33,10 @@ void DarknetBaseNode::initialize(int stage) {
         for(std::vector<std::string>::iterator iter = v.begin(); iter != v.end(); iter++) {
             std::vector<std::string> peer_tuple = cStringTokenizer((*iter).c_str(),port_delimiter).asVector(); //split <destID>:<destPort>
             if(peer_tuple.size() == 2) {
-                std::string nodeID = peer_tuple[0];
+                const std::string& nodeID = peer_tuple[0];
                 std::istringstream convert(peer_tuple[1]);
                 int port;
-                port = convert >> port ? port : 0;  //convert string to int (user 0 on error)
+                port = convert >> port ? port : 0;  //convert string to int (use 0 on error)
                 IPvXAddress ip = IPAddressResolver().resolve(nodeID.c_str());
                 addPeer(nodeID, ip, port);
             }else {
@@ -54,7 +54,7 @@ void DarknetBaseNode::sendPacket(DarknetMessage* dmsg, IPvXAddress& destAddr, in
     sendToUDP(dmsg, localPort, destAddr, destPort);
 }
 
-void DarknetBaseNode::addPeer(std::string nodeID, IPvXAddress& destAddr, int destPort) {
+void DarknetBaseNode::addPeer(const std::string& nodeID, IPvXAddress& destAddr, int destPort) {
     DarknetPeer& peer = peers[nodeID];
     peer.nodeID = nodeID;
     peer.address = destAddr;
@@ -115,7 +115,7 @@ void DarknetBaseNode::forwardMessage(DarknetMessage* msg) {
     delete msg;
 }
 
-DarknetMessage* DarknetBaseNode::makeRequest(std::string nodeID) {
+DarknetMessage* DarknetBaseNode::makeRequest(const std::string& nodeID) {
     DarknetMessage *msg = new DarknetMessage();
     msg->setSrcNodeID(this->nodeID.c_str());
     msg->setDestNodeID(nodeID.c_str());
