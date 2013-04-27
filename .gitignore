@@ -1,3 +1,5 @@
 DarknetSim/out/
 DarknetSim/src/Makefile
 DarknetSim/src/results
+DarknetSim/src/*_m.cc
+DarknetSim/src/*_m.h
