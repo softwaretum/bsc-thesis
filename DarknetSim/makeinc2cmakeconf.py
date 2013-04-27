@@ -42,7 +42,7 @@ print("Using \"%s\"." % makefile_path)
 # Now create out CMake config file and start writing some generic stuff.
 cmakefile = open("OMNeT++Config.cmake", 'w')
 cmakefile.write("# This file was auto-generated via %s\n" % argv[0])
-cmakefile.write("# This CMake config might not expose the complete OMNeT++ environment\n\n")
+cmakefile.write("# This CMake config might not expose the complete OMNeT++ build environment\n\n")
 
 print(
     "if(NOT OMNeT++_BUILD_TYPE)",
@@ -94,6 +94,18 @@ def convert_cflags(match_key, match_value, cmake_op):
 regex_assign = re.compile(r"(\w+)\s*=\s*([^#\n]*)",   re.ASCII)
 regex_append = re.compile(r"(\w+)\s*\+=\s*([^#\n]*)", re.ASCII)
 regex_varref = re.compile(r"\$\((\w+)\)",             re.ASCII)
+regex_empty  = re.compile(r"^\s*(?:#.*)?$",           re.ASCII)
+
+linenumber = None
+
+# make evaluates the variables lazily, cmake eagerly.
+# This is why right now I don't care about variable references in values.
+def transform_varrefs(arg):
+    global linenumber
+    # re.sub(regex_varref, "${\1}", arg)
+    if regex_varref.search(arg):
+        print("Sorry, I can't deal with variable references (yet?)\n\tfile %s, line %d: %s" % (makefile_path, linenumber, arg))
+    return arg
 
 # Makefile operations with these variables will simply get translated into CMake syntax.
 # Key is Makefile-variable, value is CMake name.
@@ -107,15 +119,19 @@ translate = {
     "MSGC": "MSGC",
 }
 
+# This is for CPPFLAGS, whether we need to append or assign them to DEFINITIONS
+defs_set = False
+
 # Now we start converting the Makefile.inc
 for linenumber, line in enumerate(open(makefile_path, 'r')):
-    if line == "\n" or line[0] == "#":
+    if regex_empty.match(line):
         newline = True
         continue
     
     match = regex_assign.search(line)
     if match:
         key, value = match.groups()
+        # value = transform_varrefs(value)
         if key in translate:
             begin_write()
             cmake_set(translate[key], value)
@@ -127,11 +143,21 @@ for linenumber, line in enumerate(open(makefile_path, 'r')):
             cmake_set("VERSION_STRING", value)
             newline = True
         elif key.startswith("CFLAGS_"):
-            convert_cflags(key, value, cmake_set)
+            cmake_op = cmake_set if defs_set != 'cppflags' else cmake_add
+            newline = True
+            convert_cflags(key, value, cmake_op)
+            defs_set = defs_set or 'cflags'
+        elif key == "CPPFLAGS":
+            cmake_op = cmake_set if defs_set != 'cflags' else cmake_add
+            begin_write()
+            cmake_op("DEFINITIONS", value)
+            defs_set = defs_set or 'cppflags'
+        continue
     
     match = regex_append.search(line)
     if match:
         key, value = match.groups()
+        # value = transform_varrefs(value)
         if key in translate:
             begin_write()
             cmake_add(translate[key], value)
@@ -139,6 +165,6 @@ for linenumber, line in enumerate(open(makefile_path, 'r')):
             print("Sorry, I can't deal with adding to OMNETPP_VERSION (yet?)\n\tfile %s, line %d: %s\n\tIgnoring..." % (makefile_path, linenumber, line.strip()))
         elif key.startswith("CFLAGS_"):
             convert_cflags(key, value, cmake_add)
+        continue
     
-    # TODO: deal with varrefs
-    # TODO: and _LIBS
+    # TODO: _LIBS
