@@ -9,18 +9,28 @@ import os
 
 def usage():
     print(
-        "%s [path to Makefile.inc]" % argv[0],
+        "%s [path to Makefile.inc] -- Generate CMake config" % argv[0],
+        "%s -h                     -- Display this help" % argv[0],
+        "%s -c                     -- Check if the file can be located automatically (reported via exit-status)" % argv[0],
+        "\t",
         "\tThis tool attempts to (partially, but sufficiently) convert OMNeT++'s Makefile.inc to a CMake config-file.",
+        "\tYou can supply the path to the Makefile.inc via command-line parameter, else it will attempt to locate the file automatically and if that fails ask the user.",
         sep = "\n")
     exit(0)
 
 # First find OMNeT++'s Makefile.inc.
 makefile_path = None
+just_check = False
 if len(argv) > 1:
-    if "-h" in argv:
-        usage()
-    makefile_path = argv[1]
-else:
+    if argv[1] == '-c':
+        import sys
+        sys.stdout = None
+        just_check = True
+    else:
+        if len(argv) > 2 or argv[1] == '-h':
+            usage()
+        makefile_path = argv[1]
+if not makefile_path:
     print("Attempting to locate Makefile.inc.")
     
     try:
@@ -42,14 +52,19 @@ else:
     else:
         makefile_path = opp_configfilepath.stdout.read().decode().strip()
 
-if makefile_path is None:
+if not makefile_path:
+    if just_check:
+        exit(1)
     print("Could not locate Makefile.inc.")
-    makefile_path = input("Please provide the path to OMNeT++'s Makefile.inc: ")
+    makefile_path = input("Please enter the complete path to OMNeT++'s Makefile.inc\n> ")
+
+if just_check:
+    exit(0)
 
 print("Using \"%s\"." % makefile_path)
 
 # Now create out CMake config file and start writing some generic stuff.
-cmakefile_path = "OMNeT++Config.cmake"
+cmakefile_path = "cmake/OMNeT++Config.cmake"
 
 if os.path.exists(cmakefile_path):
     while True:
@@ -61,19 +76,15 @@ if os.path.exists(cmakefile_path):
 
 print("Writing to %s" % cmakefile_path)
 
+os.makedirs(os.path.dirname(cmakefile_path), exist_ok = True)
 cmakefile = open(cmakefile_path, 'w')
 cmakefile.write("# This file was auto-generated via %s\n" % argv[0])
 cmakefile.write("# This CMake config might not expose the complete OMNeT++ build environment\n\n")
 
 print(
     "if(NOT OMNeT++_BUILD_TYPE)",
-    "\tset(OMNeT++_BUILD_TYPE \"release\")",
+    "\tset(OMNeT++_BUILD_TYPE \"Release\")",
     "endif()",
-    "",
-    "set(OMNeT++_DEFINITIONS)",
-    "set(OMNeT++_INCLUDE_DIRS)",
-    "set(OMNeT++_LIBRARY_DIRS)",
-    "set(OMNeT++_LIBRARIES)",
     sep = "\n", file = cmakefile)
 
 # This controls indentation-level for cmake_set and cmake_add.
@@ -81,11 +92,11 @@ cmakefile_indentation = 0
 
 # Assign value to key
 def cmake_set(key, value):
-    cmakefile.write("%sset(OMNeT++_%s \"%s\")\n" % ("\t" * cmakefile_indentation, key, value))
+    cmakefile.write("%sset(OMNeT++_%s \"%s\")\n" % ("\t" * cmakefile_indentation, key, "\" \"".join(value)))
 
 # Append value to key
 def cmake_add(key, value):
-    cmakefile.write("%sset(OMNeT++_%s \"${OMNeT++_%s} %s\")\n" % ("\t" * cmakefile_indentation, key, key, value))
+    cmakefile.write("%slist(APPEND OMNeT++_%s \"%s\")\n" % ("\t" * cmakefile_indentation, key, "\" \"".join(value)))
 
 # We will try to cluster variables (without empty lines) like Makefile.inc.
 # Since we don't convert everything, we can't just copy every new line.
@@ -147,14 +158,15 @@ def per_config_cflags(match_key, match_value):
     global newline
     global cmakefile_indentation
     # match_key = "CFLAGS_*", strip CFLAGS_
-    configuration = match_key[7:]
+    configuration = match_key[7:].capitalize()
+    configuration[0].upper()
     flags = convert_cflags(match_value)
     
     begin_write()
     cmakefile.write("if(${OMNeT++_BUILD_TYPE} STREQUAL \"%s\")\n" % configuration)
     cmakefile_indentation += 1
     for name, values in flags.items():
-        cmake_add(name, " ".join(values))
+        cmake_add(name, values)
     cmakefile_indentation -= 1
     cmakefile.write("endif()\n")
     newline = True
@@ -183,10 +195,25 @@ translate = {
     "OMNETPP_BIN_DIR": "PROGRAM_PATH",
     "OMNETPP_INCL_DIR": "INCLUDE_DIRS",
     "OMNETPP_LIB_DIR": "LIBRARY_DIRS",
-    "OMNETPP_IMAGE_PATH": "IMAGE_PATH",
+    "OMNETPP_IMAGE_PATH": "IMAGE_DIRS",
     # find_program instead?
     "MSGC": "MSGC",
 }
+
+def gen_version_file(version):
+    root, ext = os.path.splitext(cmakefile_path)
+    print(
+        "set(PACKAGE_VERSION %s)" % version,
+        "",
+        "if(\"${PACKAGE_VERSION}\" VERSION_LESS \"${PACKAGE_FIND_VERSION}\")",
+        "    set(PACKAGE_VERSION_COMPATIBLE FALSE)",
+        "else()",
+        "    set(PACKAGE_VERSION_COMPATIBLE TRUE)",
+        "    if(\"${PACKAGE_FIND_VERSION}\" STREQUAL \"${PACKAGE_VERSION}\")",
+        "        set(PACKAGE_VERSION_EXACT TRUE)",
+        "    endif()",
+        "endif()",
+        sep = "\n", file = open(root + "Version" + ext, 'w'))
 
 # Now we start converting the Makefile.inc
 for linenumber, line in enumerate(open(makefile_path, 'r')):
@@ -200,14 +227,15 @@ for linenumber, line in enumerate(open(makefile_path, 'r')):
         # value = transform_varrefs(value)
         if key in translate:
             begin_write()
-            cmake_set(translate[key], value)
+            cmake_set(translate[key], [value])
         elif key == "OMNETPP_VERSION":
             begin_write()
             version_parts = ["MAJOR", "MINOR", "PATCH"]
             for index, version in enumerate(value.split(".")[:len(version_parts)]):
-                cmake_set("VERSION_" + version_parts[index], version)
-            cmake_set("VERSION_STRING", value)
+                cmake_set("VERSION_" + version_parts[index], [version])
+            cmake_set("VERSION", [value])
             newline = True
+            gen_version_file(value)
         # Properly done this would parse the HAVE_*-variables and look for its CMake modules.
         # meh
         elif key.startswith("CFLAGS_"):
@@ -216,12 +244,12 @@ for linenumber, line in enumerate(open(makefile_path, 'r')):
         elif key == "CPPFLAGS":
             begin_write()
             for name, values in convert_cflags(value).items():
-                cmake_add(name, " ".join(values))
+                cmake_add(name, values)
         elif key == "LDFLAGS":
             begin_write()
             for name, values in convert_ldflags(value).items():
-                cmake_add(name, " ".join(values))
-            # These needs a bit more hackaroo
+                cmake_add(name, values)
+        # These need a bit more hackaroo
         elif key.endswith("ENV_LIBS") or key == "KERNEL_LIBS":
             begin_write()
             libs = filter(lambda flag: flag.startswith("-l"), shlex.split(value))
@@ -229,7 +257,7 @@ for linenumber, line in enumerate(open(makefile_path, 'r')):
             libs = list(map(lambda libflag: libflag[2:-2], libs))
             if libs == []:
                 continue
-            cmake_add("LIBRARIES", " ".join(libs))
+            cmake_add("LIBRARIES", libs)
         continue
     
     match = regex_append.search(line)
@@ -238,7 +266,7 @@ for linenumber, line in enumerate(open(makefile_path, 'r')):
         # value = transform_varrefs(value)
         if key in translate:
             begin_write()
-            cmake_add(translate[key], value)
+            cmake_add(translate[key], [value])
         elif key == "OMNETPP_VERSION":
             print("Sorry, I can't deal with adding to OMNETPP_VERSION (yet?)\n\tfile %s, line %d: %s\n\tIgnoring..." % (makefile_path, linenumber, line.strip()))
         elif key.startswith("CFLAGS_"):
@@ -247,9 +275,9 @@ for linenumber, line in enumerate(open(makefile_path, 'r')):
         elif key == "CPPFLAGS":
             begin_write()
             for name, values in convert_cflags(value).items():
-                cmake_add(name, " ".join(values))
+                cmake_add(name, values)
         elif key == "LDFLAGS":
             begin_write()
             for name, values in convert_ldflags(value).items():
-                cmake_add(name, " ".join(values))
+                cmake_add(name, values)
         continue
