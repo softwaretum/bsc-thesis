@@ -16,7 +16,10 @@
 #include <IPAddressResolver.h>
 #include "HotpotatoNode.h"
 
-Define_Module(HotpotatoNode);
+PingTimer::~PingTimer() {
+}
+
+Define_Module(HotpotatoNode)
 
 void HotpotatoNode::initialize(int stage) {
     DarknetBaseNode::initialize(stage);
@@ -30,14 +33,14 @@ void HotpotatoNode::initialize(int stage) {
     }
 }
 
-void HotpotatoNode::connectPeer(const std::string& nodeID, IPvXAddress* destAddr, int destPort) {
+void HotpotatoNode::connectPeer(const std::string& toNodeID, IPvXAddress* destAddr, int destPort) {
     DarknetMessage *dm = new DarknetMessage();
     dm->setType(DM_CON_SYN);
-    dm->setSrcNodeID(this->nodeID.c_str());
-    dm->setDestNodeID(nodeID.c_str());
+    dm->setSrcNodeID(nodeID.c_str());
+    dm->setDestNodeID(toNodeID.c_str());
     sendPacket(dm, *destAddr, destPort);
 //    sendMessage(dm);
-};
+}
 
 DarknetPeer* HotpotatoNode::findNextHop(DarknetMessage* msg) {
     if(!connections.size()) { // peer list empty -> raise exception? (TODO)
@@ -77,8 +80,9 @@ void HotpotatoNode::handleIncomingMessage(DarknetMessage *msg) {
             dm->setType(DM_CON_ACK);
             dm->setSrcNodeID(msg->getDestNodeID());
             dm->setDestNodeID(msg->getSrcNodeID());
-            sendPacket(dm,peer.address,peer.port);
+            sendPacket(dm, peer.address, peer.port);
         }
+        delete msg;
         break;
     }
     case DM_CON_ACK: {

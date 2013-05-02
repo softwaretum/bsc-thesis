@@ -21,14 +21,15 @@
 
 class PingTimer: public cMessage {
 public:
-    PingTimer(std::string name) : cMessage(name.c_str()) {};
+    PingTimer(const std::string& name) : cMessage(name.c_str()) {}
+    virtual ~PingTimer();
 };
 
 
 class HotpotatoNode: public DarknetBaseNode {
 public:
-   HotpotatoNode() : DarknetBaseNode::DarknetBaseNode() {};
-   virtual ~HotpotatoNode() {};
+   HotpotatoNode() : DarknetBaseNode::DarknetBaseNode() {}
+   virtual ~HotpotatoNode() {}
 protected:
 
    virtual int numInitStages() const { return 6; }
@@ -36,7 +37,7 @@ protected:
    virtual void initialize(int stage);
    virtual void handleSelfMessage(cMessage* msg);
    virtual void handleIncomingMessage(DarknetMessage* msg);
-   virtual void connectPeer(const std::string& nodeID, IPvXAddress* destAddr, int destPort); //do nothing
+   virtual void connectPeer(const std::string& toNodeID, IPvXAddress* destAddr, int destPort); //do nothing
 };
 
 #endif /* HOTPOTATONODE_H_ */
