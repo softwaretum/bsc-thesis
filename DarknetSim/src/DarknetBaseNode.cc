@@ -18,6 +18,7 @@
 #include "DarknetBaseNode.h"
 #include <UDPPacket.h>
 #include <cstringtokenizer.h>
+#include <algorithm>
 
 void DarknetBaseNode::initialize(int stage) {
     switch (stage) {
@@ -30,24 +31,21 @@ void DarknetBaseNode::initialize(int stage) {
         const char* port_delimiter = ":";
         std::vector<std::string> v = cStringTokenizer(par("dest_id")).asVector();
         for(std::vector<std::string>::iterator iter = v.begin(); iter != v.end(); iter++) {
-            std::vector<std::string> peer_tuple = cStringTokenizer((*iter).c_str(),port_delimiter).asVector(); //split <destID>:<destPort>
+            std::vector<std::string> peer_tuple = cStringTokenizer((*iter).c_str(), port_delimiter).asVector(); //split <destID>:<destPort>
             if(peer_tuple.size() == 2) {
-                std::string nodeID = peer_tuple[0];
+                const std::string& addNodeID = peer_tuple[0];
                 std::istringstream convert(peer_tuple[1]);
                 int port;
-                port = convert >> port ? port : 0;  //convert string to int (user 0 on error)
+                port = convert >> port ? port : 0;  //convert string to int (use 0 on error)
                 IPvXAddress ip = IPAddressResolver().resolve(nodeID.c_str());
-                addPeer(nodeID, ip, port);
+                addPeer(addNodeID, ip, port);
             }else {
                 EV << "Error on parsing peer list; this peer seems malformed: " << (*iter);
             }
         }}
         break;
     case 4:
-        for(std::map<std::string, DarknetPeer*>::iterator iter = peers.begin(); iter != peers.end(); iter++) {
-            DarknetPeer* peer = iter->second;
-            connectPeer(peer->nodeID,&peer->address,peer->port);
-        }
+        std::for_each(peers.begin(), peers.end(), PeerConnector(*this));
         break;
     }
 }
@@ -56,21 +54,20 @@ void DarknetBaseNode::sendPacket(DarknetMessage* dmsg, IPvXAddress& destAddr, in
     sendToUDP(dmsg, localPort, destAddr, destPort);
 }
 
-void DarknetBaseNode::addPeer(std::string nodeID, IPvXAddress& destAddr, int destPort) {
-    DarknetPeer* peer = new DarknetPeer;
-    peer->nodeID = nodeID;
-    peer->address = destAddr;
-    peer->port = destPort;
-    peers.insert(std::pair<std::string, DarknetPeer*>(nodeID,peer));
+void DarknetBaseNode::addPeer(const std::string& addNodeID, IPvXAddress& destAddr, int destPort) {
+    DarknetPeer& peer = peers[addNodeID];
+    peer.nodeID = addNodeID;
+    peer.address = destAddr;
+    peer.port = destPort;
 }
 
 void DarknetBaseNode::sendMessage(DarknetMessage* msg) {
     DarknetPeer *destPeer = findNextHop(msg);
     if(destPeer != NULL) {
-        int size = msg->getVisitedNodesArraySize();
+        unsigned int size = msg->getVisitedNodesArraySize();
         msg->setVisitedNodesArraySize(size+1);
-        msg->setVisitedNodes(size,this->nodeID.c_str());
-        sendPacket(msg,destPeer->address,destPeer->port);
+        msg->setVisitedNodes(size, nodeID.c_str());
+        sendPacket(msg, destPeer->address, destPeer->port);
     } else {
         EV << "No next hop found for message: " << msg;
         //TODO: implement proper default error handling here
@@ -112,23 +109,23 @@ void DarknetBaseNode::forwardMessage(DarknetMessage* msg) {
         msg->setTTL(ttl-1);
         sendMessage(((DarknetMessage*)msg)->dup());
     }else {
-        // TODO: inform simulator/user of droped message
+        // TODO: inform simulator/user of dropped message
         EV << "dropped message";
     }
     delete msg;
 }
 
-DarknetMessage* DarknetBaseNode::makeRequest(std::string nodeID) {
+DarknetMessage* DarknetBaseNode::makeRequest(const std::string& toNodeID) {
     DarknetMessage *msg = new DarknetMessage();
-    msg->setSrcNodeID(this->nodeID.c_str());
-    msg->setDestNodeID(nodeID.c_str());
+    msg->setSrcNodeID(nodeID.c_str());
+    msg->setDestNodeID(toNodeID.c_str());
     msg->setType(DM_REQUEST);
     return msg;
 }
 
 void DarknetBaseNode::handleRequest(DarknetMessage* request) {
     DarknetMessage *msg = new DarknetMessage();
-    msg->setSrcNodeID(this->nodeID.c_str());
+    msg->setSrcNodeID(nodeID.c_str());
     msg->setDestNodeID(request->getSrcNodeID());
     msg->setType(DM_RESPONSE);
     msg->encapsulate(request->dup());
