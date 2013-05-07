@@ -9,7 +9,7 @@ if(NOT BUILD_EXTRA_WARNINGS)
 	set(BUILD_EXTRA_WARNINGS "Warn")
 endif()
 
-list(APPEND CMAKE_CXX_FLAGS "-g -Wall -Wextra -pedantic")
+list(APPEND CMAKE_CXX_FLAGS "-Wall -Wextra -pedantic")
 
 set(COLOR_DIAG_FLAG "-fcolor-diagnostics")
 check_cxx_compiler_flag (${COLOR_DIAG_FLAG} HAVE_COLOR_DIAG_FLAG)
@@ -20,7 +20,7 @@ endif()
 
 set(WARN_EVERYTHING_FLAG "-Weverything")
 # Some warnings that are of absolutely no interest
-set(WARN_NOT_FLAGS "-Wno-c++98-compat;-Wno-c++98-compat-pedantic;-Wno-exit-time-destructors")
+set(WARN_NOT_FLAGS "-Wno-c++98-compat" "-Wno-c++98-compat-pedantic" "-Wno-exit-time-destructors" "-Wno-global-constructors" "-Wno-#warnings" "-Wno-c++11-extra-semi")
 if(${BUILD_EXTRA_WARNINGS} STREQUAL "Warn-more")
 	set(BUILD_EXTRA_WARNINGS "Warn")
 else()
