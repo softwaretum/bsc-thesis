@@ -16,11 +16,15 @@
 #ifndef DARKNETBASENODE_H_
 #define DARKNETBASENODE_H_
 
-#include <omnetpp.h>
 #include <UDPAppBase.h>
-//#include "messages/DarknetMessage.h"
-//#include "messages/MaintenanceMessage.h"
-#include "darknetmessage_m.h"
+#include <IPvXAddress.h>
+#include <simtime_t.h>
+
+#include <map>
+#include <string>
+
+class cMessage;
+class DarknetMessage;
 
 struct DarknetPeer {
     std::string nodeID;
@@ -46,9 +50,9 @@ protected:
         PeerConnector(DarknetBaseNode &connector) : node(connector) {}
 
         //ideally DarknetPeer&-operand and boost::adaptors::map_values
-        void operator()(std::map<std::string, DarknetPeer>::value_type &to) {
-            DarknetPeer &toNode = to.second;
-            node.connectPeer(toNode.nodeID, &toNode.address, toNode.port);
+        void operator()(const std::map<std::string, DarknetPeer>::value_type &to) {
+            const DarknetPeer &toNode = to.second;
+            node.connectPeer(toNode.nodeID, toNode.address, toNode.port);
         }
 
         DarknetBaseNode &node;
@@ -61,10 +65,10 @@ protected:
 
     //things you probably don't have to change
     virtual int numInitStages() const { return 5; }
-    virtual void sendPacket(DarknetMessage* pkg, IPvXAddress& destAddr, int destPort);
+    virtual void sendPacket(DarknetMessage* pkg, const IPvXAddress& destAddr, int destPort);
     virtual void sendMessage(DarknetMessage* msg);
     virtual void handleMessage(cMessage* msg);
-    virtual void addPeer(const std::string& addNodeID, IPvXAddress& destAddr, int destPort);
+    virtual void addPeer(const std::string& addNodeID, const IPvXAddress& destAddr, int destPort);
     virtual DarknetMessage* makeRequest(const std::string& toNodeID);
 
 
@@ -77,7 +81,7 @@ protected:
 
 
     //things you have to implement
-    virtual void connectPeer(const std::string& toNodeID, IPvXAddress* destAddr, int destPort) = 0;
+    virtual void connectPeer(const std::string& toNodeID, const IPvXAddress& destAddr, int destPort) = 0;
     virtual DarknetPeer* findNextHop(DarknetMessage* msg) = 0;
     virtual void handleSelfMessage(cMessage* msg) = 0;
 

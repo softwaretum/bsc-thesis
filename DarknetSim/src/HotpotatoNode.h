@@ -16,8 +16,12 @@
 #ifndef HOTPOTATONODE_H_
 #define HOTPOTATONODE_H_
 
+#include <string>
+
 #include "DarknetBaseNode.h"
 
+class DarknetMessage;
+class IPvXAddress;
 
 class PingTimer: public cMessage {
 public:
@@ -28,7 +32,7 @@ public:
 
 class HotpotatoNode: public DarknetBaseNode {
 public:
-   HotpotatoNode() : DarknetBaseNode::DarknetBaseNode() {}
+   HotpotatoNode() {}
    virtual ~HotpotatoNode() {}
 protected:
 
@@ -37,7 +41,7 @@ protected:
    virtual void initialize(int stage);
    virtual void handleSelfMessage(cMessage* msg);
    virtual void handleIncomingMessage(DarknetMessage* msg);
-   virtual void connectPeer(const std::string& toNodeID, IPvXAddress* destAddr, int destPort); //do nothing
+   virtual void connectPeer(const std::string& toNodeID, const IPvXAddress& destAddr, int destPort); //do nothing
 };
 
 #endif /* HOTPOTATONODE_H_ */

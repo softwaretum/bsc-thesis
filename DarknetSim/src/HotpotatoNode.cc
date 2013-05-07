@@ -13,8 +13,17 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#include <IPAddressResolver.h>
 #include "HotpotatoNode.h"
+
+#include <string>
+#include <vector>
+
+#include <cenvir.h>
+#include <cmessage.h>
+#include <cstringtokenizer.h>
+#include <IPvXAddress.h>
+
+#include "darknetmessage_m.h"
 
 PingTimer::~PingTimer() {
 }
@@ -25,20 +34,20 @@ void HotpotatoNode::initialize(int stage) {
     DarknetBaseNode::initialize(stage);
 
     if (stage == 5) {
-        std::vector<std::string> v = cStringTokenizer(par("ping_id")).asVector();
-        for(std::vector<std::string>::iterator iter = v.begin(); iter != v.end(); iter++) {
-            cMessage *timer = new PingTimer((*iter));
-                scheduleAt(1.0, timer);
+        const std::vector<std::string> v = cStringTokenizer(par("ping_id")).asVector();
+        for(std::vector<std::string>::const_iterator iter = v.begin(); iter != v.end(); iter++) {
+            cMessage *timer = new PingTimer(*iter);
+            scheduleAt(1.0, timer);
         }
     }
 }
 
-void HotpotatoNode::connectPeer(const std::string& toNodeID, IPvXAddress* destAddr, int destPort) {
+void HotpotatoNode::connectPeer(const std::string& toNodeID, const IPvXAddress& destAddr, int destPort) {
     DarknetMessage *dm = new DarknetMessage();
     dm->setType(DM_CON_SYN);
     dm->setSrcNodeID(nodeID.c_str());
     dm->setDestNodeID(toNodeID.c_str());
-    sendPacket(dm, *destAddr, destPort);
+    sendPacket(dm, destAddr, destPort);
 //    sendMessage(dm);
 }
 
@@ -51,7 +60,7 @@ DarknetPeer* HotpotatoNode::findNextHop(DarknetMessage* msg) {
     if(destPeer != peers.end() and connections.find(msg->getDestNodeID()) != connections.end()) {
         return &destPeer->second;
     }else {
-        std::map<std::string, DarknetConnection>::iterator iter = connections.begin();
+        std::map<std::string, DarknetConnection>::const_iterator iter = connections.begin();
         std::advance(iter, dblrand() * connections.size());
         //assert(peers.find(iter->first) != peers.end()); ?
         return &peers[iter->first];
@@ -61,6 +70,8 @@ DarknetPeer* HotpotatoNode::findNextHop(DarknetMessage* msg) {
 void HotpotatoNode::handleSelfMessage(cMessage *msg) {
     if(dynamic_cast<PingTimer*>(msg) != NULL) {
         sendMessage(makeRequest(msg->getName()));
+    }else {
+        EV << "received unknown self-message " << msg;
     }
     delete msg;
 }
@@ -72,10 +83,10 @@ void HotpotatoNode::handleIncomingMessage(DarknetMessage *msg) {
         delete msg;
         break;
     case DM_CON_SYN: {
-        std::map<std::string, DarknetPeer>::iterator peerIter = peers.find(msg->getSrcNodeID());
+        std::map<std::string, DarknetPeer>::const_iterator peerIter = peers.find(msg->getSrcNodeID());
         if(peerIter != peers.end()) {
             EV << "received CON_SYN from: " << msg->getSrcNodeID() << endl;
-            DarknetPeer& peer = peerIter->second;
+            const DarknetPeer& peer = peerIter->second;
             DarknetMessage *dm = new DarknetMessage();
             dm->setType(DM_CON_ACK);
             dm->setSrcNodeID(msg->getDestNodeID());
@@ -88,7 +99,7 @@ void HotpotatoNode::handleIncomingMessage(DarknetMessage *msg) {
     case DM_CON_ACK: {
         DarknetConnection& dc = connections[msg->getSrcNodeID()];
         dc.nodeID = msg->getSrcNodeID();
-        dc.lastSeen=0; //TODO fix
+        dc.lastSeen = simulation.getSimTime();
         EV << "connection to " << dc.nodeID << "established" << endl;
         delete msg;
         break;
