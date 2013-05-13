@@ -39,9 +39,12 @@ convert_message_files(MESSAGE_FILES MESSAGE_INCLUDE_DIRS
 	)
 include_directories(${MESSAGE_INCLUDE_DIRS})
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 add_executable(darknetsim
 	${MESSAGE_FILES}
 	"DarknetBaseNode.cc"
 	"HotpotatoNode.cc"
 	)
 target_link_libraries(darknetsim oppmain ${OMNeT++_LIBRARIES})
+
+configure_file("omnetpp.ini.in" "${CMAKE_BINARY_DIR}/omnetpp.ini")

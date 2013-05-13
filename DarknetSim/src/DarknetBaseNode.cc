@@ -13,12 +13,18 @@
 // along with this program.  If not, see http://www.gnu.org/licenses/.
 // 
 
-#include <omnetpp.h>
-#include <IPAddressResolver.h>
 #include "DarknetBaseNode.h"
-#include <UDPPacket.h>
-#include <cstringtokenizer.h>
+
 #include <algorithm>
+#include <string>
+#include <vector>
+
+#include <cstringtokenizer.h>
+#include <IPAddressResolver.h>
+#include <IPvXAddress.h>
+#include <UDPPacket.h>
+
+#include "darknetmessage_m.h"
 
 void DarknetBaseNode::initialize(int stage) {
     switch (stage) {
@@ -37,7 +43,7 @@ void DarknetBaseNode::initialize(int stage) {
                 std::istringstream convert(peer_tuple[1]);
                 int port;
                 port = convert >> port ? port : 0;  //convert string to int (use 0 on error)
-                IPvXAddress ip = IPAddressResolver().resolve(nodeID.c_str());
+                const IPvXAddress ip = IPAddressResolver().resolve(addNodeID.c_str());
                 addPeer(addNodeID, ip, port);
             }else {
                 EV << "Error on parsing peer list; this peer seems malformed: " << (*iter);
@@ -50,11 +56,11 @@ void DarknetBaseNode::initialize(int stage) {
     }
 }
 
-void DarknetBaseNode::sendPacket(DarknetMessage* dmsg, IPvXAddress& destAddr, int destPort) {
+void DarknetBaseNode::sendPacket(DarknetMessage* dmsg, const IPvXAddress& destAddr, int destPort) {
     sendToUDP(dmsg, localPort, destAddr, destPort);
 }
 
-void DarknetBaseNode::addPeer(const std::string& addNodeID, IPvXAddress& destAddr, int destPort) {
+void DarknetBaseNode::addPeer(const std::string& addNodeID, const IPvXAddress& destAddr, int destPort) {
     DarknetPeer& peer = peers[addNodeID];
     peer.nodeID = addNodeID;
     peer.address = destAddr;
@@ -62,7 +68,7 @@ void DarknetBaseNode::addPeer(const std::string& addNodeID, IPvXAddress& destAdd
 }
 
 void DarknetBaseNode::sendMessage(DarknetMessage* msg) {
-    DarknetPeer *destPeer = findNextHop(msg);
+    const DarknetPeer *destPeer = findNextHop(msg);
     if(destPeer != NULL) {
         unsigned int size = msg->getVisitedNodesArraySize();
         msg->setVisitedNodesArraySize(size+1);
@@ -107,7 +113,7 @@ void DarknetBaseNode::forwardMessage(DarknetMessage* msg) {
     int ttl = msg->getTTL();
     if(ttl > 0) {
         msg->setTTL(ttl-1);
-        sendMessage(((DarknetMessage*)msg)->dup());
+        sendMessage(msg->dup());
     }else {
         // TODO: inform simulator/user of dropped message
         EV << "dropped message";
